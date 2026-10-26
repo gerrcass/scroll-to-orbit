@@ -267,6 +267,21 @@ export const createRocket = (): KestrelModel => {
   const dish = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), metalMaterial);
   dish.position.y = 0.3;
   satellite.add(dish);
+
+  const cubesats = new THREE.Group();
+  for (let index = 0; index < 12; index += 1) {
+    const cube = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.09, 0.075), foilMaterial);
+    cube.add(body);
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.006, 0.085), darkMaterial);
+    panel.position.x = 0.16;
+    cube.add(panel);
+    const otherPanel = panel.clone();
+    otherPanel.position.x = -0.16;
+    cube.add(otherPanel);
+    cubesats.add(cube);
+  }
+  satellite.add(cubesats);
   upper.add(satellite);
 
   group.add(booster, upper);
@@ -486,11 +501,22 @@ export const createRocket = (): KestrelModel => {
   const setSatelliteDeploy = (amount: number): void => {
     const t = Math.max(0, Math.min(1, amount));
     satellite.visible = t > 0.01;
-    satellite.position.y = 7.38 + t * 1.3;
-    satellite.rotation.y = t * 1.4;
-    satellite.scale.setScalar(0.7 + t * 0.3);
+    satellite.position.y = 7.38 + t * 1.7;
+    satellite.rotation.y = t * 1.1;
+    satellite.scale.setScalar(1.25 + t * 0.75);
     panelLeft.scale.x = 0.4 + t * 0.6;
     panelRight.scale.x = 0.4 + t * 0.6;
+
+    cubesats.children.forEach((cube, index) => {
+      const angle = (index / cubesats.children.length) * Math.PI * 2;
+      const radius = 0.22 + t * (1.7 + (index % 3) * 0.22);
+      cube.position.set(
+        Math.cos(angle) * radius,
+        t * (0.35 + (index % 4) * 0.16) + Math.sin(angle * 2.0) * 0.18 * t,
+        Math.sin(angle) * radius,
+      );
+      cube.rotation.set(t * 0.8, angle + t * 1.8, t * 0.45);
+    });
   };
 
   const dispose = (): void => {

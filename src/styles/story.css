@@ -1052,13 +1052,28 @@
   line-height: 1.7;
 }
 
-.orbit__payload span {
+.orbit__payload span,
+.orbit__sunrise span {
   display: block;
   margin-bottom: 8px;
   color: var(--ember);
   font-family: var(--mono);
   font-size: 8px;
   letter-spacing: 0.16em;
+}
+
+.orbit__sunrise {
+  max-width: 42ch;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.orbit__sunrise span {
+  color: var(--ember-soft);
 }
 
 .orbit__instrument {
@@ -1153,32 +1168,58 @@
   font-size: 7px;
   letter-spacing: 0.12em;
   transform: translate(-50%, -50%);
+  transition: color 320ms var(--ease-out);
+}
+
+.dial__notch.is-active {
+  color: var(--ember);
+}
+
+.orbit-map__labels text {
+  transition: fill 320ms var(--ease-out);
+}
+
+.orbit-map__labels text.is-active {
+  fill: var(--ember);
 }
 
 .dial__notch--0 {
-  top: 16%;
+  top: 14%;
   left: 50%;
 }
 
 .dial__notch--1 {
-  top: 78%;
-  left: 78%;
+  top: 71%;
+  left: 86.4%;
 }
 
 .dial__notch--2 {
-  top: 78%;
-  left: 22%;
+  top: 71%;
+  left: 13.6%;
 }
 
 .dial__pointer {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 42%;
+  width: 38%;
   height: 1px;
   background: linear-gradient(90deg, var(--ember), rgba(255, 90, 31, 0.12));
   transform-origin: 0 50%;
-  transform: rotate(-38deg);
+  transform: rotate(30deg);
+  will-change: transform;
+}
+
+.dial__drag {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 50%;
+  cursor: grab;
+}
+
+.dial__drag:active {
+  cursor: grabbing;
 }
 
 .dial__pointer::after {
@@ -1962,4 +2003,10 @@
   .mission-card {
     margin-right: 0;
   }
+}
+
+
+html[data-motion="reduced"] .dial__knob,
+html[data-motion="reduced"] .dial__drag {
+  cursor: default;
 }
