@@ -460,8 +460,66 @@
 .schematic {
   width: 100%;
   height: auto;
-  max-height: min(78vh, 840px);
-  padding: 10px 18px 18px;
+  max-height: min(68vh, 720px);
+  padding: 10px 18px 14px;
+}
+
+.profile {
+  padding: 13px 16px 14px;
+  border-top: 1px solid var(--line-soft);
+  background: rgba(5, 7, 10, 0.2);
+}
+
+.profile__head,
+.profile__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+}
+
+.profile__head span:last-child {
+  color: var(--ember);
+}
+
+.profile__svg {
+  width: 100%;
+  height: auto;
+  max-height: 178px;
+  margin-top: 8px;
+}
+
+.profile__path {
+  fill: none;
+  stroke: var(--ember);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.profile__dot {
+  fill: var(--ice);
+}
+
+.profile__dot--land {
+  fill: var(--ember);
+  opacity: 0.16;
+}
+
+.profile__labels text {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+}
+
+.profile__foot {
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--faint);
 }
 
 .schematic__labels {

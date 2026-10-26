@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 const offsets = async (page: Page): Promise<Record<string, number>> =>
   page.evaluate(() =>
     Object.fromEntries(
-      ["mission", "ascent", "separation", "orbit"].map((id) => [
+      ["vehicle", "mission", "ascent", "separation", "orbit"].map((id) => [
         id,
         Math.round(
           (document.getElementById(id)?.getBoundingClientRect().top ?? 0) + window.scrollY,
@@ -45,6 +45,9 @@ test("the story advances through the countdown and ascent", async ({ page }) => 
   await scrollTo(page, positions.separation ?? 0);
   await expect(page.locator('[data-act-link="SEPARATION"]')).toHaveClass(/is-active/);
   await expect(page.locator('[data-telemetry="velocity"]').first()).not.toHaveText("0.00");
+
+  await scrollTo(page, (positions.separation ?? 0) + 900);
+  await expect(page.locator('[data-telemetry="stage"]').first()).toHaveText("02");
 
   await scrollTo(page, positions.orbit ?? 0);
   await expect(page.locator('[data-act-link="ORBIT"]')).toHaveClass(/is-active/);
@@ -93,4 +96,19 @@ test("reduced motion skips smoothing but keeps the countdown", async ({ page }) 
     () => Number(document.querySelector("[data-clock-s]")?.textContent ?? 10) < 10,
   );
   await expect(page.locator("[data-launch-status]")).toContainText(/IGNITION|LAUNCH|LIFTOFF/);
+});
+
+
+test("the vehicle schematic morphs into the recovery profile", async ({ page }) => {
+  await page.goto("/");
+  const positions = await offsets(page);
+  await scrollTo(page, positions.vehicle ?? 0);
+  await expect(page.locator("[data-config-label]")).toHaveText("ASCENT CONFIGURATION");
+  const before = await page.locator("[data-flight-profile]").getAttribute("d");
+
+  await scrollTo(page, (positions.vehicle ?? 0) + 430);
+  await expect(page.locator("[data-config-label]")).toHaveText("RECOVERY CONFIGURATION");
+  await expect(page.locator("[data-profile-state]")).toHaveText("RECOVERY / RETURN");
+  const after = await page.locator("[data-flight-profile]").getAttribute("d");
+  expect(after).not.toBe(before);
 });

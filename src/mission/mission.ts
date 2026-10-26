@@ -41,7 +41,7 @@ const MISSION_KEYS: readonly MissionKey[] = [
   { progress: 1, time: 512, altitude: 420, velocity: 7.66, downrange: 1400, throttle: 0 },
 ] as const;
 
-const STAGE_SEPARATION_PROGRESS = 0.68;
+const STAGE_SEPARATION_PROGRESS = 0.63;
 
 export const actForProgress = (progress: number): Act => {
   const p = clamp01(progress);
@@ -109,7 +109,7 @@ export const telemetryForProgress = (progress: number): TelemetrySnapshot => {
     velocityKms: key.velocity,
     downrangeKm: key.downrange,
     throttle: key.throttle,
-    stage: (p >= STAGE_SEPARATION_PROGRESS ? 2 : 1) as Stage,
+    stage: (p >= STAGE_SEPARATION_PROGRESS - 0.0005 ? 2 : 1) as Stage,
     phase: phaseForProgress(p),
   };
 };

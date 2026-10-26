@@ -58,16 +58,16 @@ export const CAMERA_KEYS: readonly CameraKey[] = [
   },
   {
     progress: 0.64,
-    position: [12.5, 50.0, 31.0],
-    lookAt: [0, 47.5, 0],
-    fov: 46,
+    position: [12.5, 52.0, 37.0],
+    lookAt: [0, 44.0, 0],
+    fov: 49,
     roll: 0.05,
   },
   {
     progress: 0.72,
-    position: [8.0, 52.0, 34.0],
-    lookAt: [0, 49.5, 0],
-    fov: 47,
+    position: [8.0, 53.0, 39.0],
+    lookAt: [0, 46.0, 0],
+    fov: 49,
     roll: 0.08,
   },
   {

@@ -280,6 +280,39 @@
                   <line x1="338" y1="570" x2="382" y2="570" />
                 </g>
               </svg>
+
+              <div class="profile">
+                <div class="profile__head">
+                  <span>FLIGHT PROFILE</span>
+                  <span data-profile-state>ASCENT → RECOVERY</span>
+                </div>
+                <svg class="profile__svg" viewBox="0 0 420 150" role="img" aria-labelledby="profile-title">
+                  <title id="profile-title">Kestrel ascent profile and reusable booster return to Pad 09</title>
+                  <defs>
+                    <path id="flight-recovery" d="M24 126 C 70 120 120 96 168 70 C 216 44 268 32 320 34 C 370 36 392 60 382 92 C 372 122 336 138 296 134" />
+                    <linearGradient id="profile-fade" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0" stop-color="#ff5a1f" stop-opacity=".9" />
+                      <stop offset="1" stop-color="#ff5a1f" stop-opacity=".25" />
+                    </linearGradient>
+                  </defs>
+                  <g class="profile__grid" stroke="rgba(242,238,229,.08)" stroke-width="1">
+                    <path d="M0 38H420M0 76H420M0 114H420M105 0V150M210 0V150M315 0V150" />
+                  </g>
+                  <path class="profile__path" data-flight-profile d="M24 126 C 70 120 120 96 168 70 C 216 44 268 32 320 34" />
+                  <circle class="profile__dot" data-flight-orbit cx="320" cy="34" r="3.2" />
+                  <circle class="profile__dot profile__dot--land" data-flight-end cx="296" cy="134" r="3.2" />
+                  <g class="profile__labels">
+                    <text x="18" y="144">PAD 09</text>
+                    <text x="296" y="24">ORBIT</text>
+                    <text x="264" y="146">LANDING</text>
+                  </g>
+                </svg>
+                <div class="profile__foot">
+                  <span>BOOSTER / RETURN TO PAD</span>
+                  <span>27.4 M / 1,180 KG</span>
+                </div>
+              </div>
+
               <figcaption class="sr-only">Kestrel is 27.4 metres tall, with a 3.2 metre fairing, nine H-1 engines on the reusable booster, grid fins for terminal guidance, and landing legs for return to pad.</figcaption>
             </figure>
           </div>

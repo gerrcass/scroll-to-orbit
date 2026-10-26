@@ -65,8 +65,9 @@ describe("telemetryForProgress", () => {
   });
 
   it("switches to stage two at the separation boundary", () => {
-    expect(telemetryForProgress(0.679).stage).toBe(1);
-    expect(telemetryForProgress(0.68).stage).toBe(2);
+    expect(telemetryForProgress(0.629).stage).toBe(1);
+    expect(telemetryForProgress(0.6299).stage).toBe(2);
+    expect(telemetryForProgress(0.64).stage).toBe(2);
     expect(telemetryForProgress(0.68).phase).toBe("SECOND STAGE");
   });
 
