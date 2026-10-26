@@ -1,5 +1,5 @@
 import { clamp01, inverseLerp, lerp, smoothstep } from "../lib/math";
-import type { CameraKey, Vector3Tuple } from "./types";
+import type { CameraKey } from "./types";
 
 /**
  * Camera keys are absolute world-space values. The rocket's own lift is
@@ -93,39 +93,56 @@ export const CAMERA_KEYS: readonly CameraKey[] = [
   },
 ] as const;
 
-const mix = (from: Vector3Tuple, to: Vector3Tuple, t: number): Vector3Tuple => [
-  lerp(from[0], to[0], t),
-  lerp(from[1], to[1], t),
-  lerp(from[2], to[2], t),
-];
+const copyInto = (from: CameraKey, to: CameraKey, progress: number): CameraKey => {
+  to.progress = progress;
+  to.position[0] = from.position[0];
+  to.position[1] = from.position[1];
+  to.position[2] = from.position[2];
+  to.lookAt[0] = from.lookAt[0];
+  to.lookAt[1] = from.lookAt[1];
+  to.lookAt[2] = from.lookAt[2];
+  to.fov = from.fov;
+  to.roll = from.roll;
+  return to;
+};
 
-export const cameraForProgress = (progress: number): CameraKey => {
+/**
+ * Writes the sampled camera into a reusable object. The render loop uses this
+ * form; the allocating wrapper below is for tests and tooling.
+ */
+export const cameraForProgressInto = (progress: number, out: CameraKey): CameraKey => {
   const p = clamp01(progress);
   const first = CAMERA_KEYS[0]!;
   const last = CAMERA_KEYS[CAMERA_KEYS.length - 1]!;
-  if (p <= first.progress) return cloneKey(first);
-  if (p >= last.progress) return cloneKey(last);
+  if (p <= first.progress) return copyInto(first, out, p);
+  if (p >= last.progress) return copyInto(last, out, p);
 
   for (let index = 0; index < CAMERA_KEYS.length - 1; index += 1) {
     const from = CAMERA_KEYS[index]!;
     const to = CAMERA_KEYS[index + 1]!;
     if (p >= from.progress && p <= to.progress) {
       const t = smoothstep(inverseLerp(from.progress, to.progress, p));
-      return {
-        progress: p,
-        position: mix(from.position, to.position, t),
-        lookAt: mix(from.lookAt, to.lookAt, t),
-        fov: lerp(from.fov, to.fov, t),
-        roll: lerp(from.roll, to.roll, t),
-      };
+      out.progress = p;
+      out.position[0] = lerp(from.position[0], to.position[0], t);
+      out.position[1] = lerp(from.position[1], to.position[1], t);
+      out.position[2] = lerp(from.position[2], to.position[2], t);
+      out.lookAt[0] = lerp(from.lookAt[0], to.lookAt[0], t);
+      out.lookAt[1] = lerp(from.lookAt[1], to.lookAt[1], t);
+      out.lookAt[2] = lerp(from.lookAt[2], to.lookAt[2], t);
+      out.fov = lerp(from.fov, to.fov, t);
+      out.roll = lerp(from.roll, to.roll, t);
+      return out;
     }
   }
 
-  return cloneKey(first);
+  return copyInto(first, out, p);
 };
 
-const cloneKey = (key: CameraKey): CameraKey => ({
-  ...key,
-  position: [...key.position],
-  lookAt: [...key.lookAt],
-});
+export const cameraForProgress = (progress: number): CameraKey =>
+  cameraForProgressInto(progress, {
+    progress: 0,
+    position: [0, 0, 0],
+    lookAt: [0, 0, 0],
+    fov: 37,
+    roll: 0,
+  });

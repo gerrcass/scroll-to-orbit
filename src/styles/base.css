@@ -286,3 +286,11 @@ h3 {
     animation: none;
   }
 }
+
+
+html[data-motion="reduced"] .status__dot,
+html[data-motion="reduced"] .pulse-dot,
+html[data-motion="reduced"] .scroll-cue__line::after,
+html[data-motion="reduced"] .grain {
+  animation: none;
+}

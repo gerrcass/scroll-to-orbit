@@ -20,6 +20,7 @@ export interface StoryCallbacks {
 export interface StoryHandle {
   smoother: ScrollSmoother | null;
   getProgress: () => number;
+  setReduced: (reduced: boolean) => void;
   refresh: () => void;
   destroy: () => void;
 }
@@ -34,7 +35,7 @@ const SEGMENTS: readonly StorySegment[] = [
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
 export const initStory = (callbacks: StoryCallbacks): StoryHandle => {
-  const reduced = getMotionPreference() === "reduced";
+  let reduced = getMotionPreference() === "reduced";
   const finePointer = window.matchMedia("(pointer: fine)").matches;
   let smoother: ScrollSmoother | null = null;
   let current = 0;
@@ -44,7 +45,8 @@ export const initStory = (callbacks: StoryCallbacks): StoryHandle => {
 
   ScrollTrigger.config({ ignoreMobileResize: true });
 
-  if (!reduced && finePointer) {
+  const createSmoother = (): void => {
+    if (smoother || !finePointer) return;
     smoother = ScrollSmoother.create({
       wrapper: "#smooth-wrapper",
       content: "#smooth-content",
@@ -52,7 +54,9 @@ export const initStory = (callbacks: StoryCallbacks): StoryHandle => {
       effects: true,
       smoothTouch: 0,
     });
-  }
+  };
+
+  if (!reduced) createSmoother();
 
   const emit = (progress: number): void => {
     const value = clamp01(progress);
@@ -156,9 +160,24 @@ export const initStory = (callbacks: StoryCallbacks): StoryHandle => {
       }));
   }
 
+  const setReduced = (value: boolean): void => {
+    if (value === reduced) return;
+    reduced = value;
+    const scrollY = window.scrollY;
+    if (value) {
+      smoother?.kill();
+      smoother = null;
+      window.scrollTo(0, scrollY);
+    } else {
+      createSmoother();
+    }
+    ScrollTrigger.refresh();
+  };
+
   return {
     smoother,
     getProgress: () => current,
+    setReduced,
     refresh,
     destroy,
   };

@@ -1,9 +1,11 @@
 import "./styles/index.css";
 
-import { initMotionPreference, subscribeMotion } from "./motion/preferences";
+import { getMotionPreference, initMotionPreference, subscribeMotion } from "./motion/preferences";
 import { initMarquee } from "./motion/marquee";
 import { initReveals } from "./motion/reveals";
 import { initStory } from "./motion/story";
+import { reducedStillForAct } from "./mission/mission";
+import type { TelemetrySnapshot } from "./mission/types";
 import { createStage, type Stage } from "./scene/Stage";
 import { initActRail } from "./ui/act-rail";
 import { initBackToTop } from "./ui/back-to-top";
@@ -54,20 +56,29 @@ const boot = (): void => {
   const telemetry = initTelemetry();
   const stageInstance = stage();
   let storyProgress = 0;
-
-  if (stageInstance) {
-    subscribeMotion((preference) => {
-      stageInstance.setReduced(preference === "reduced");
-    });
-  }
+  let lastSnapshot: TelemetrySnapshot | null = null;
 
   const story = initStory({
     onProgress: (progress, snapshot) => {
       storyProgress = progress;
-      stageInstance?.setProgress(progress);
+      lastSnapshot = snapshot;
+      if (getMotionPreference() === "reduced") {
+        stageInstance?.setReducedStill(reducedStillForAct(snapshot.act));
+      } else {
+        stageInstance?.setProgress(progress);
+      }
       telemetry.update(progress, snapshot);
       actRail.update(progress);
     },
+  });
+
+  subscribeMotion((preference) => {
+    const reduced = preference === "reduced";
+    stageInstance?.setReduced(reduced);
+    if (reduced) {
+      stageInstance?.setReducedStill(reducedStillForAct(lastSnapshot?.act ?? "PAD"));
+    }
+    story.setReduced(reduced);
   });
 
   initScrollLinks();

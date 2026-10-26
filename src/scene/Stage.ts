@@ -61,6 +61,10 @@ export class Stage {
   private frameCount = 0;
   private lastDprChange = 0;
   private lastSky = -1;
+  private reducedStill = 0.04;
+  private needsRender = false;
+  private lastCanvasUpdate = 0;
+  private lastFps = 60;
   private readonly onResize = (): void => this.resize();
   private readonly onPointer = (event: PointerEvent): void => {
     this.pointerTargetX = (event.clientX / window.innerWidth) * 2 - 1;
@@ -113,7 +117,7 @@ export class Stage {
     this.smoke = createSmoke(this.tier.smokeCount);
     this.scene.add(this.smoke.points);
 
-    this.smokeCloud = createSmokeCloud(this.tier.name === "low" ? 18 : 34);
+    this.smokeCloud = createSmokeCloud(this.tier.name === "high" ? 28 : this.tier.name === "mid" ? 20 : 12);
     this.scene.add(this.smokeCloud.group);
 
     this.ignitionGlowTexture = createGlowTexture();
@@ -136,7 +140,9 @@ export class Stage {
     this.padFlash.position.set(0, 2.2, 3);
     this.scene.add(this.padFlash);
 
-    this.earth = createEarth(window.innerWidth < 760 ? 56 : 80);
+    const earthSegments = this.tier.name === "high" ? 88 : this.tier.name === "mid" ? 64 : 44;
+    const earthOctaves = this.tier.name === "high" ? 4 : 3;
+    this.earth = createEarth(earthSegments, earthOctaves);
     this.scene.add(this.earth.group, this.earth.sunLight, this.earth.sunLight.target);
 
     this.addLights();
@@ -147,6 +153,18 @@ export class Stage {
     this.applyProgress(true);
 
     if (import.meta.env.DEV) {
+      (window as Window & {
+        __HALCYON_SMOKE_TOGGLE__?: (on: boolean) => void;
+        __HALCYON_EARTH_TOGGLE__?: (on: boolean) => void;
+        __HALCYON_STAGE_DEBUG__?: () => unknown;
+      }).__HALCYON_SMOKE_TOGGLE__ = (on: boolean) => {
+        this.smoke.points.visible = on;
+        this.smokeCloud.group.visible = on;
+        this.rocket.flame.visible = on;
+      };
+      (window as Window & { __HALCYON_EARTH_TOGGLE__?: (on: boolean) => void }).__HALCYON_EARTH_TOGGLE__ = (on: boolean) => {
+        this.earth.group.visible = on;
+      };
       (window as Window & { __HALCYON_STAGE_DEBUG__?: () => unknown }).__HALCYON_STAGE_DEBUG__ = () => ({
         smokeVisible: this.smoke.points.visible,
         smokeIgnition: this.smoke.material.uniforms.uIgnition?.value,
@@ -154,6 +172,11 @@ export class Stage {
         rocketY: this.rocket.group.position.y,
         progress: this.progress,
         viewProgress: this.canvas.dataset.viewProgress,
+        fps: this.lastFps,
+        dpr: this.currentDpr,
+        tier: this.tier.name,
+        calls: this.renderer.info.render.calls,
+        triangles: this.renderer.info.render.triangles,
       });
     }
   }
@@ -216,9 +239,24 @@ export class Stage {
 
   setReduced(reduced: boolean): void {
     this.reduced = reduced;
-    this.rig.reset(reduced ? 0.04 : this.progress);
-    this.applyProgress(true);
-    this.render();
+    this.needsRender = true;
+    if (reduced) {
+      this.applyReducedStill();
+    } else {
+      this.rig.reset(this.progress);
+      this.applyProgress(true);
+      this.updateEffects(this.progress);
+      this.render();
+    }
+  }
+
+  setReducedStill(progress: number): void {
+    const value = Math.min(1, Math.max(0, progress));
+    if (Math.abs(value - this.reducedStill) < 0.0001) return;
+    this.reducedStill = value;
+    if (!this.reduced) return;
+    this.needsRender = true;
+    this.applyReducedStill();
   }
 
   start(): void {
@@ -242,32 +280,57 @@ export class Stage {
 
   private readonly tick = (): void => {
     if (!this.running || this.paused) return;
+
+    if (this.reduced) {
+      if (this.needsRender) {
+        this.needsRender = false;
+        this.applyReducedStill();
+      }
+      return;
+    }
+
     const now = performance.now();
     const delta = Math.min(0.05, (now - this.lastTimestamp) / 1000);
     this.lastTimestamp = now;
     this.time += delta;
 
-    const damping = this.reduced ? 1 : 1 - Math.pow(0.001, delta);
+    const damping = 1 - Math.pow(0.001, delta);
     this.progress += (this.targetProgress - this.progress) * damping;
     this.pointerX += (this.pointerTargetX - this.pointerX) * Math.min(1, delta * 3.8);
     this.pointerY += (this.pointerTargetY - this.pointerY) * Math.min(1, delta * 3.8);
 
-    const viewProgress = this.reduced ? 0.04 : this.progress;
+    const viewProgress = this.progress;
     this.applyProgress(false);
     const throttle = throttleForProgress(viewProgress);
     const ignition = ignitionEnvelope(viewProgress);
-    const shake = this.reduced
-      ? 0
-      : ignition * 0.12 + (viewProgress > 0.3 && viewProgress < 0.56 ? throttle * 0.022 : 0);
+    const shake = ignition * 0.12 + (viewProgress > 0.3 && viewProgress < 0.56 ? throttle * 0.022 : 0);
     this.rig.update(
       viewProgress,
       this.time,
       { x: this.pointerX, y: this.pointerY },
-      this.reduced,
+      false,
       shake,
     );
+    this.updateEffects(viewProgress);
+    this.render();
+
+    this.trackPerformance(delta);
+    this.options.onFrame?.(this.progress);
+  };
+
+  private applyReducedStill(): void {
+    const progress = this.reducedStill;
+    this.applyProgress(true);
+    this.rig.reset(progress);
+    this.updateEffects(progress);
+    this.render();
+    this.needsRender = false;
+  }
+
+  private updateEffects(viewProgress: number): void {
     this.stars.material.uniforms.uTime!.value = this.time;
     this.stars.points.rotation.y = viewProgress * 0.16 + this.time * 0.0025;
+
     const smokeAmount =
       clamp01((viewProgress - 0.18) / 0.04) * (1 - inverseLerp(0.6, 0.86, viewProgress));
     this.smoke.material.uniforms.uTime!.value = this.time;
@@ -275,18 +338,16 @@ export class Stage {
     const showSmoke = !this.reduced && viewProgress < 0.7 && smokeAmount > 0.002;
     this.smoke.points.visible = showSmoke;
     this.smokeCloud.update(showSmoke ? smokeAmount : 0, this.time);
+
+    const ignition = ignitionEnvelope(viewProgress);
     this.ignitionGlow.material.opacity = this.reduced ? 0 : ignition * 0.85;
     this.ignitionGlow.scale.set(7 + ignition * 3, 4 + ignition * 2, 1);
     this.padFlash.intensity = this.reduced ? 0 : ignition * 120;
     this.earth.update(viewProgress, this.time);
-    this.render();
-
-    this.trackPerformance(delta);
-    this.options.onFrame?.(this.progress);
-  };
+  }
 
   private applyProgress(force: boolean): void {
-    const progress = this.reduced ? 0.04 : this.progress;
+    const progress = this.reduced ? this.reducedStill : this.progress;
     const lift = rocketLiftForProgress(progress);
     const throttle = throttleForProgress(progress) * (progress > 0.16 ? 1 : 0);
     const boosterThrottle = throttle * (1 - inverseLerp(0.58, 0.64, progress));
@@ -319,12 +380,15 @@ export class Stage {
     }
 
     const ignition = ignitionEnvelope(progress);
-    if (ignition > 0.01) {
+    if (!this.reduced && ignition > 0.01) {
       this.pad.group.position.x = (Math.random() - 0.5) * ignition * 0.012;
     }
 
-    this.canvas.dataset.progress = this.progress.toFixed(3);
-    this.canvas.dataset.viewProgress = progress.toFixed(3);
+    if (force || this.time - this.lastCanvasUpdate > 0.15) {
+      this.canvas.dataset.progress = this.progress.toFixed(3);
+      this.canvas.dataset.viewProgress = progress.toFixed(3);
+      this.lastCanvasUpdate = this.time;
+    }
   }
 
   private render(): void {
@@ -337,12 +401,13 @@ export class Stage {
     if (this.frameAccumulator < 2.2) return;
 
     const fps = this.frameCount / this.frameAccumulator;
+    this.lastFps = fps;
     this.frameAccumulator = 0;
     this.frameCount = 0;
 
     if (this.time - this.lastDprChange < 4) return;
-    if (fps < 46 && this.currentDpr > 1.05) {
-      this.currentDpr = Math.max(1.05, this.currentDpr - 0.15);
+    if (fps < 46 && this.currentDpr > 0.86) {
+      this.currentDpr = Math.max(0.85, this.currentDpr - 0.15);
       this.renderer.setPixelRatio(this.currentDpr);
       this.renderer.setSize(window.innerWidth, window.innerHeight, false);
       this.lastDprChange = this.time;
@@ -361,8 +426,13 @@ export class Stage {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     if (this.moon) this.moon.visible = width >= 760;
-    this.rig.reset(this.progress);
-    if (!this.running) this.render();
+    if (this.reduced) {
+      this.rig.reset(this.reducedStill);
+      this.applyReducedStill();
+    } else {
+      this.rig.reset(this.progress);
+      if (!this.running) this.render();
+    }
   }
 
   dispose(): void {

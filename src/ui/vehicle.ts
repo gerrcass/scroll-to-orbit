@@ -14,14 +14,77 @@ export const initVehicle = (): void => {
 
   if (!figure || !profile) return;
 
-  const reduced = getMotionPreference() === "reduced";
+  const ascentPath = profile.getAttribute("d") ?? "";
+  let reduced = getMotionPreference() === "reduced";
+  let morph: gsap.core.Tween | null = null;
+  let labelTrigger: ScrollTrigger | null = null;
 
-  if (reduced) {
+  const showRecovery = (): void => {
     profile.setAttribute("d", RECOVERY_PATH);
     if (configLabel) configLabel.textContent = "RECOVERY CONFIGURATION";
     if (profileState) profileState.textContent = "RECOVERY / RETURN";
     if (landDot) landDot.style.opacity = "1";
     if (orbitDot) orbitDot.style.opacity = "0.2";
+  };
+
+  const stopMorph = (): void => {
+    morph?.kill();
+    labelTrigger?.kill();
+    morph = null;
+    labelTrigger = null;
+    showRecovery();
+  };
+
+  const startMorph = (): void => {
+    if (reduced || morph) return;
+    profile.setAttribute("d", ascentPath);
+    if (configLabel) configLabel.textContent = "ASCENT CONFIGURATION";
+    if (profileState) profileState.textContent = "ASCENT → RECOVERY";
+
+    morph = gsap.to(profile, {
+      morphSVG: "#flight-recovery",
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".vehicle",
+        start: "top 60%",
+        end: "bottom 45%",
+        scrub: 1,
+      },
+    });
+    morph.progress(0);
+
+    if (orbitDot) gsap.set(orbitDot, { opacity: 1 });
+    if (landDot) gsap.set(landDot, { opacity: 0.16 });
+
+    let lastRecovery: boolean | null = null;
+    labelTrigger = ScrollTrigger.create({
+      trigger: ".vehicle",
+      start: "top 60%",
+      end: "bottom 45%",
+      onUpdate: (self) => {
+        const recovery = self.progress > 0.48;
+        if (recovery === lastRecovery) return;
+        lastRecovery = recovery;
+        if (configLabel) {
+          configLabel.textContent = recovery ? "RECOVERY CONFIGURATION" : "ASCENT CONFIGURATION";
+        }
+        if (profileState) {
+          profileState.textContent = recovery ? "RECOVERY / RETURN" : "ASCENT → RECOVERY";
+        }
+        if (landDot) gsap.to(landDot, { opacity: recovery ? 1 : 0.16, duration: 0.25 });
+        if (orbitDot) gsap.to(orbitDot, { opacity: recovery ? 0.2 : 1, duration: 0.25 });
+      },
+    });
+  };
+
+  document.addEventListener("halcyon:motion", () => {
+    reduced = getMotionPreference() === "reduced";
+    if (reduced) stopMorph();
+    else startMorph();
+  });
+
+  if (reduced) {
+    showRecovery();
     gsap.set(".schematic__draw path", { drawSVG: "100%" });
     return;
   }
@@ -61,38 +124,5 @@ export const initVehicle = (): void => {
     },
   });
 
-  const morph = gsap.to(profile, {
-    morphSVG: "#flight-recovery",
-    ease: "none",
-    scrollTrigger: {
-      trigger: ".vehicle",
-      start: "top 60%",
-      end: "bottom 45%",
-      scrub: 1,
-    },
-  });
-  morph.progress(0);
-
-  if (orbitDot) gsap.set(orbitDot, { opacity: 1 });
-  if (landDot) gsap.set(landDot, { opacity: 0.16 });
-
-  let lastRecovery: boolean | null = null;
-  ScrollTrigger.create({
-    trigger: ".vehicle",
-    start: "top 60%",
-    end: "bottom 45%",
-    onUpdate: (self) => {
-      const recovery = self.progress > 0.48;
-      if (recovery === lastRecovery) return;
-      lastRecovery = recovery;
-      if (configLabel) {
-        configLabel.textContent = recovery ? "RECOVERY CONFIGURATION" : "ASCENT CONFIGURATION";
-      }
-      if (profileState) {
-        profileState.textContent = recovery ? "RECOVERY / RETURN" : "ASCENT → RECOVERY";
-      }
-      if (landDot) gsap.to(landDot, { opacity: recovery ? 1 : 0.16, duration: 0.25 });
-      if (orbitDot) gsap.to(orbitDot, { opacity: recovery ? 0.2 : 1, duration: 0.25 });
-    },
-  });
+  startMorph();
 };
