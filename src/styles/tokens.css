@@ -1,0 +1,40 @@
+:root {
+  /* Color */
+  --ink: #05070a;
+  --ink-raised: #090d12;
+  --ink-panel: rgba(7, 11, 16, 0.66);
+  --bone: #f2eee5;
+  --bone-dim: #c7c2b7;
+  --muted: #8b9095;
+  --faint: #5c6268;
+  --line: rgba(242, 238, 229, 0.16);
+  --line-soft: rgba(242, 238, 229, 0.075);
+  --ember: #ff5a1f;
+  --ember-soft: #ff9864;
+  --ice: #9fc4dd;
+  --go: #b9ef78;
+  --danger: #ff6d6d;
+
+  /* Type */
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --sans: "Instrument Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  /* Space */
+  --pad: clamp(20px, 5vw, 84px);
+  --gutter: clamp(18px, 2.4vw, 40px);
+  --max: 1680px;
+  --section-y: clamp(104px, 17vh, 210px);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 180ms;
+  --dur: 320ms;
+  --dur-slow: 640ms;
+
+  /* Scene */
+  --scene-progress: 0;
+  --sky-ember: 0.16;
+  --sky-cold: 0.2;
+}
