@@ -70,6 +70,10 @@ _Avoid_: Normal mode
 The accessible experience selected by the OS preference or the in-page toggle: no scroll-linked camera, no parallax or marquee, static act stills, and instantly visible content.
 _Avoid_: Fallback mode
 
+**Reduced still**:
+The fixed Three.js composition shown for an act when reduced motion is active; it changes at act boundaries, never continuously with scroll.
+_Avoid_: Static mode, freeze frame
+
 **WebGL fallback**:
 The designed no-WebGL experience: a CSS/SVG night-sky poster, the same copy, and static telemetry.
 _Avoid_: Error state

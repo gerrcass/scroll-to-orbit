@@ -13,6 +13,9 @@ export default defineConfig({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 1,
     trace: "retain-on-failure",
+    launchOptions: {
+      args: ["--enable-unsafe-swiftshader"],
+    },
   },
   webServer: {
     command: "pnpm dev --host 127.0.0.1 --port 5173",
