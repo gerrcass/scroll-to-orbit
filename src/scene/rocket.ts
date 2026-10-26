@@ -64,6 +64,8 @@ export const createRocket = (): KestrelModel => {
     color: 0xffffff,
     roughness: 0.56,
     metalness: 0.1,
+    emissive: 0x3a3023,
+    emissiveIntensity: 0.95,
   });
   const darkMaterial = new THREE.MeshStandardMaterial({
     color: 0x111518,
@@ -90,6 +92,8 @@ export const createRocket = (): KestrelModel => {
     color: 0xe8e2d7,
     roughness: 0.62,
     metalness: 0.12,
+    emissive: 0x332b1f,
+    emissiveIntensity: 0.85,
   });
   const foilMaterial = new THREE.MeshStandardMaterial({
     color: 0xd4a54e,
@@ -273,20 +277,20 @@ export const createRocket = (): KestrelModel => {
   const innerFlameMaterial = createFlameMaterial();
 
   const outerFlame = new THREE.Mesh(
-    new THREE.ConeGeometry(0.46, 2.7, 24, 1, true),
+    new THREE.ConeGeometry(0.58, 3.4, 24, 1, true),
     outerFlameMaterial,
   );
   outerFlame.rotation.x = Math.PI;
-  outerFlame.position.y = -1.34;
+  outerFlame.position.y = -1.7;
   outerFlame.renderOrder = 5;
   flame.add(outerFlame);
 
   const innerFlame = new THREE.Mesh(
-    new THREE.ConeGeometry(0.24, 1.65, 18, 1, true),
+    new THREE.ConeGeometry(0.3, 2.05, 18, 1, true),
     innerFlameMaterial,
   );
   innerFlame.rotation.x = Math.PI;
-  innerFlame.position.y = -0.82;
+  innerFlame.position.y = -1.02;
   innerFlame.renderOrder = 6;
   flame.add(innerFlame);
 
@@ -297,12 +301,46 @@ export const createRocket = (): KestrelModel => {
       transparent: true,
       opacity: 0,
       depthWrite: false,
+      depthTest: false,
       blending: THREE.AdditiveBlending,
     }),
   );
-  engineGlow.scale.set(2.3, 2.3, 1);
-  engineGlow.position.y = -0.1;
+  engineGlow.scale.set(4.2, 4.2, 1);
+  engineGlow.position.y = -0.18;
+  engineGlow.renderOrder = 7;
   flame.add(engineGlow);
+
+  const plumeOuter = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: 0xff5a1f,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  plumeOuter.scale.set(2.8, 5.8, 1);
+  plumeOuter.position.y = -1.3;
+  plumeOuter.renderOrder = 8;
+  flame.add(plumeOuter);
+
+  const plumeInner = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: 0xffd7a8,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  plumeInner.scale.set(1.1, 3.6, 1);
+  plumeInner.position.y = -1.0;
+  plumeInner.renderOrder = 9;
+  flame.add(plumeInner);
 
   const engineLight = new THREE.PointLight(0xff5a1f, 0, 24, 1.8);
   engineLight.position.y = -0.2;
@@ -332,12 +370,26 @@ export const createRocket = (): KestrelModel => {
     innerFlameMaterial.uniforms.uTime!.value = time;
     outerFlameMaterial.uniforms.uOpacity!.value = visible ? 0.72 + value * 0.28 : 0;
     innerFlameMaterial.uniforms.uOpacity!.value = visible ? 0.85 * value : 0;
-    outerFlame.scale.set(0.72 + value * 0.38, 0.55 + value * 0.75, 0.72 + value * 0.38);
-    innerFlame.scale.set(0.72 + value * 0.3, 0.7 + value * 0.55, 0.72 + value * 0.3);
-    engineLight.intensity = visible ? 22 + value * 42 : 0;
-    engineGlow.material.opacity = visible ? 0.28 + value * 0.5 : 0;
-    engineGlow.scale.setScalar(1.7 + value * 1.4);
-    engineGlow.scale.z = 1;
+    outerFlame.scale.set(0.82 + value * 0.46, 0.62 + value * 0.94, 0.82 + value * 0.46);
+    innerFlame.scale.set(0.8 + value * 0.34, 0.72 + value * 0.62, 0.8 + value * 0.34);
+    const flicker = 0.92 + Math.sin(time * 41.0) * 0.08 + Math.sin(time * 67.0) * 0.04;
+    engineLight.intensity = visible ? (36 + value * 78) * flicker : 0;
+    engineGlow.material.opacity = visible ? 0.38 + value * 0.58 : 0;
+    engineGlow.scale.set(3.2 + value * 2.6, 3.2 + value * 2.6, 1);
+    plumeOuter.material.opacity = visible ? 0.4 + value * 0.5 : 0;
+    plumeOuter.scale.set(
+      (2.2 + value * 1.4) * (1 + Math.sin(time * 23.0) * 0.05),
+      4.6 + value * 2.8,
+      1,
+    );
+    plumeOuter.position.x = Math.sin(time * 17.0) * 0.08;
+    plumeInner.material.opacity = visible ? 0.36 + value * 0.4 : 0;
+    plumeInner.scale.set(
+      (0.9 + value * 0.7) * (1 + Math.sin(time * 29.0) * 0.06),
+      3.0 + value * 1.6,
+      1,
+    );
+    plumeInner.position.x = Math.sin(time * 21.0 + 1.0) * 0.05;
   };
 
   const setLift = (lift: number): void => {

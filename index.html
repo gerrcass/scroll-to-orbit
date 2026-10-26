@@ -301,13 +301,19 @@
             <div class="launch__clock-wrap">
               <div class="launch__clock-label">MISSION CLOCK</div>
               <div class="launch__clock" data-mission-clock aria-live="off">
-                <span class="launch__t">T−</span><span data-clock-h>00</span><span class="launch__colon">:</span><span data-clock-m>00</span><span class="launch__colon">:</span><span data-clock-s>10</span>
+                <span class="launch__t" data-clock-prefix>T−</span><span data-clock-h>00</span><span class="launch__colon">:</span><span data-clock-m>00</span><span class="launch__colon">:</span><span data-clock-s>10</span>
               </div>
+              <p class="launch__status"><span class="status__dot"></span><span data-launch-status>TERMINAL COUNT / ALL SYSTEMS NOMINAL</span></p>
               <div class="launch__readouts">
                 <div><span>WIND</span><strong>6.2 M/S</strong></div>
                 <div><span>SEA STATE</span><strong>2</strong></div>
                 <div><span>VISIBILITY</span><strong>24 KM</strong></div>
                 <div><span>AIR TEMP</span><strong>18.4 °C</strong></div>
+              </div>
+              <div class="launch__sequence">
+                <span>SEQUENCE</span>
+                <div class="launch__sequence-bar" aria-hidden="true"><i data-launch-progress></i></div>
+                <span data-launch-step>TERMINAL COUNT</span>
               </div>
             </div>
           </div>
@@ -367,7 +373,7 @@
             </ol>
 
             <div class="separation__readout" data-reveal>
-              <div><span>STAGE</span><strong>02</strong></div>
+              <div><span>STAGE</span><strong><b data-telemetry="stage">01</b></strong></div>
               <div><span>VELOCITY</span><strong><b data-telemetry="velocity">3.42</b> <small>KM/S</small></strong></div>
               <div><span>ALTITUDE</span><strong><b data-telemetry="altitude">124</b> <small>KM</small></strong></div>
             </div>

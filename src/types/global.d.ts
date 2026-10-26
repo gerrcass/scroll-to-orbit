@@ -5,6 +5,7 @@ declare global {
     __HALCYON__?: {
       setProgress: (progress: number) => void;
       getProgress: () => number;
+      scrollTo: (selector: string) => void;
       hasWebGL: boolean;
     };
   }

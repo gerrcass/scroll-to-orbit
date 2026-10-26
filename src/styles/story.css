@@ -471,9 +471,24 @@
 /* ---------------------------------------------------------------- launch */
 
 .launch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 100svh;
+  padding-top: calc(var(--section-y) * 0.55);
+  padding-bottom: calc(var(--section-y) * 0.55);
+  background: radial-gradient(ellipse 50% 60% at 75% 55%, rgba(255, 90, 31, 0.08), transparent 70%);
+}
+
+.launch::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background:
-    radial-gradient(ellipse 50% 60% at 75% 55%, rgba(255, 90, 31, 0.09), transparent 70%),
-    linear-gradient(180deg, var(--ink), rgba(5, 7, 10, 0.72) 45%, var(--ink));
+    radial-gradient(ellipse 42% 62% at 17% 56%, rgba(5, 7, 10, 0.93) 0%, rgba(5, 7, 10, 0.66) 45%, rgba(5, 7, 10, 0.16) 68%, transparent 78%),
+    linear-gradient(0deg, rgba(5, 7, 10, 0.16) 0%, transparent 36%);
+  pointer-events: none;
 }
 
 .launch__grid {
@@ -482,6 +497,11 @@
   gap: clamp(48px, 8vw, 130px);
   align-items: center;
   min-height: 62vh;
+}
+
+.launch__copy {
+  position: relative;
+  text-shadow: 0 2px 22px rgba(5, 7, 10, 0.82);
 }
 
 .launch__lead {
@@ -509,6 +529,28 @@
   font-family: var(--mono);
   font-size: 8px;
   letter-spacing: 0.12em;
+  opacity: 0.36;
+  transition: opacity 360ms var(--ease-out), color 360ms;
+}
+
+.launch__log p.is-done {
+  opacity: 0.62;
+}
+
+.launch__log p.is-active {
+  opacity: 1;
+  color: var(--bone);
+}
+
+.launch__log p.is-active::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  margin-top: 0.42em;
+  margin-right: -8px;
+  border-radius: 50%;
+  background: var(--ember);
+  box-shadow: 0 0 12px rgba(255, 90, 31, 0.8);
 }
 
 .launch__log span {
@@ -517,7 +559,67 @@
   color: var(--ember);
 }
 
+.launch__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: fit-content;
+  min-height: 1.4em;
+  margin: 12px auto 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(5, 7, 10, 0.5);
+  backdrop-filter: blur(4px);
+  text-shadow: 0 2px 12px rgba(5, 7, 10, 0.9);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-align: center;
+}
+
+.launch__status .status__dot {
+  background: var(--ember);
+  box-shadow: 0 0 10px rgba(255, 90, 31, 0.7);
+  animation-duration: 1.6s;
+}
+
+.launch__sequence {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 22px;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+.launch__sequence-bar {
+  position: relative;
+  flex: 1;
+  height: 1px;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.launch__sequence-bar i {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: linear-gradient(90deg, var(--ember), var(--ember-soft));
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.launch__sequence span:last-child {
+  color: var(--ember);
+}
+
 .launch__clock-label {
+  text-shadow: 0 2px 14px rgba(5, 7, 10, 0.98), 0 0 24px rgba(5, 7, 10, 0.8);
   color: var(--faint);
   font-family: var(--mono);
   font-size: 8px;
@@ -564,6 +666,8 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
+  background: rgba(5, 7, 10, 0.62);
+  backdrop-filter: blur(7px);
 }
 
 .launch__readouts > div {
@@ -599,7 +703,9 @@
 /* ---------------------------------------------------------------- ascent */
 
 .ascent {
-  background: linear-gradient(180deg, var(--ink) 0%, rgba(5, 7, 10, 0.86) 50%, var(--ink) 100%);
+  background:
+    radial-gradient(ellipse 46% 44% at 18% 46%, rgba(5, 7, 10, 0.72), transparent 72%),
+    linear-gradient(180deg, rgba(5, 7, 10, 0.55) 0%, rgba(5, 7, 10, 0.16) 38%, rgba(5, 7, 10, 0.6) 100%);
 }
 
 .ascent__body {
@@ -612,6 +718,7 @@
 .ascent__lead {
   max-width: 56ch;
   color: var(--bone-dim);
+  text-shadow: 0 2px 24px rgba(5, 7, 10, 0.86);
   font-family: var(--serif);
   font-size: clamp(1.55rem, 2.5vw, 2.7rem);
   line-height: 1.1;
@@ -619,8 +726,10 @@
 }
 
 .ascent__note {
-  padding-left: 24px;
+  padding: 18px 20px;
   border-left: 1px solid var(--line);
+  background: rgba(5, 7, 10, 0.5);
+  backdrop-filter: blur(5px);
 }
 
 .ascent__note span {
@@ -716,7 +825,10 @@
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   margin-top: clamp(40px, 6vh, 70px);
+  padding: 0 16px;
   border-top: 1px solid var(--line);
+  background: rgba(5, 7, 10, 0.46);
+  backdrop-filter: blur(4px);
 }
 
 .event {
@@ -1529,14 +1641,15 @@
   }
 
   .hero .display--hero {
-    font-size: clamp(3.2rem, 13.3vw, 5.4rem);
-    max-width: 9ch;
+    font-size: clamp(3rem, 12.4vw, 5.2rem);
+    max-width: 12ch;
     margin: 18px 0 22px;
   }
 
   .hero__lede {
     font-size: 14px;
     line-height: 1.62;
+    text-shadow: 0 2px 18px rgba(5, 7, 10, 0.92);
   }
 
   .hero__actions {
@@ -1555,12 +1668,18 @@
 
   .hero__veil {
     background:
-      linear-gradient(0deg, rgba(5, 7, 10, 0.99) 0%, rgba(5, 7, 10, 0.9) 36%, rgba(5, 7, 10, 0.5) 68%, rgba(5, 7, 10, 0.22) 100%),
-      linear-gradient(90deg, rgba(5, 7, 10, 0.86) 0%, rgba(5, 7, 10, 0.36) 72%, transparent 100%);
+      linear-gradient(0deg, rgba(5, 7, 10, 0.97) 0%, rgba(5, 7, 10, 0.82) 34%, rgba(5, 7, 10, 0.42) 66%, rgba(5, 7, 10, 0.16) 100%),
+      linear-gradient(90deg, rgba(5, 7, 10, 0.8) 0%, rgba(5, 7, 10, 0.28) 72%, transparent 100%);
   }
 
   .mission-card {
     display: none;
+  }
+
+  .launch__log {
+    padding: 8px 10px;
+    background: rgba(5, 7, 10, 0.52);
+    backdrop-filter: blur(4px);
   }
 
   .mission-card__head,
