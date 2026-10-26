@@ -1,4 +1,5 @@
 import type { LaunchCountdown } from "./types";
+import { pad2 } from "../lib/format";
 
 /**
  * Vesper-01's fictional cadence. Every 14 days at 03:14 UTC, so the page never
@@ -24,7 +25,6 @@ const MONTHS = [
   "DEC",
 ] as const;
 
-const pad2 = (value: number): string => String(value).padStart(2, "0");
 
 export const nextLaunchWindow = (
   now: Date = new Date(),
@@ -65,3 +65,9 @@ export const formatCountdownLong = (countdown: LaunchCountdown): string =>
 
 export const formatCountdownPadded = (countdown: LaunchCountdown): string =>
   `T− ${pad2(countdown.days)}D ${pad2(countdown.hours)}H ${pad2(countdown.minutes)}M`;
+
+export const formatManifestDate = (date: Date): string => {
+  const day = pad2(date.getUTCDate());
+  const month = MONTHS[date.getUTCMonth()] ?? "JAN";
+  return `${day} ${month} ${date.getUTCFullYear()}`;
+};

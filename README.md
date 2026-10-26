@@ -63,7 +63,7 @@ pnpm dev
 
 ```bash
 pnpm check         # typecheck + lint + unit tests + production build + 350 KB budget
-pnpm test:e2e      # 15 Playwright tests, including axe, reduced motion and WebGL-off
+pnpm test:e2e      # 16 Playwright tests, including axe, reduced motion and WebGL-off
 pnpm evidence      # builds, previews, captures docs/evidence screenshots and public/og.png
 pnpm build         # production bundle in dist/
 ```

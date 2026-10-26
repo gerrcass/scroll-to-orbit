@@ -1,4 +1,5 @@
 import { Draggable, gsap, ScrollTrigger } from "../motion/gsap";
+import { setText } from "../lib/dom";
 import { getMotionPreference } from "../motion/preferences";
 import {
   ORBIT_PROFILES,
@@ -43,9 +44,6 @@ export const initOrbit = (): void => {
   let draggable: Draggable | null = null;
   let satelliteTween: gsap.core.Tween | null = null;
 
-  const setText = (element: HTMLElement | null, value: string): void => {
-    if (element && element.textContent !== value) element.textContent = value;
-  };
 
   const originalPaths = mapPaths.map((path) => ({
     element: path,
@@ -197,7 +195,7 @@ export const initOrbit = (): void => {
         drawSVG: "0%",
         duration: 1.15,
         stagger: 0.08,
-        ease: "power2.inOut",
+        ease: "slow(0.7, 0.7)",
         scrollTrigger: {
           trigger: orbitMap,
           start: "top 82%",

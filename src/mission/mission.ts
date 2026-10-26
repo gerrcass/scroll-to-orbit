@@ -1,4 +1,5 @@
 import { clamp01, easeOutCubic, inverseLerp, lerp, round } from "../lib/math";
+import { pad2 } from "../lib/format";
 import type { Act, ActMeta, Stage, TelemetrySnapshot } from "./types";
 
 export const ACT_META: readonly ActMeta[] = [
@@ -42,6 +43,15 @@ const MISSION_KEYS: readonly MissionKey[] = [
 ] as const;
 
 const STAGE_SEPARATION_PROGRESS = 0.63;
+
+/** Scene event ranges shared by the renderer and the DOM instrumentation. */
+export const SCENE_EVENTS = {
+  stageSeparation: { start: 0.58, end: 0.72 },
+  boosterCutoff: { start: 0.58, end: 0.64 },
+  fairing: { start: 0.7, end: 0.79 },
+  payload: { start: 0.77, end: 0.88 },
+  padHidden: 0.69,
+} as const;
 
 export const actForProgress = (progress: number): Act => {
   const p = clamp01(progress);
@@ -203,9 +213,6 @@ export const telemetrySentence = (snapshot: TelemetrySnapshot): string => {
   return `${clock}. Kestrel is ${round(snapshot.altitudeKm, 1)} kilometers above the Atlantic, ${Math.round(snapshot.downrangeKm)} kilometers downrange, travelling at ${snapshot.velocityKms.toFixed(2)} kilometers per second. ${stage}, throttle ${Math.round(snapshot.throttle)} percent. Phase: ${snapshot.phase.toLowerCase()}.`;
 };
 
-function pad2(value: number): string {
-  return String(value).padStart(2, "0");
-}
 
 
 /**

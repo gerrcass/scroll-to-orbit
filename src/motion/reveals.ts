@@ -17,7 +17,7 @@ export const initReveals = (): void => {
           opacity: 0,
           duration: 1.15,
           stagger: 0.075,
-          ease: "halcyon",
+          ease: "expo-soft",
           scrollTrigger: {
             trigger: heading,
             start: "top 86%",

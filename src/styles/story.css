@@ -1419,6 +1419,29 @@
   line-height: 1.72;
 }
 
+.contact__window {
+  display: grid;
+  gap: 6px;
+  max-width: 42ch;
+  margin-top: 26px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+}
+
+.contact__window span {
+  color: var(--faint);
+  font-size: 7px;
+  letter-spacing: 0.16em;
+}
+
+.contact__window strong {
+  color: var(--bone-dim);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
 .contact__form {
   padding: 26px;
   border: 1px solid var(--line);

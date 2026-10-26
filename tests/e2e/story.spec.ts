@@ -80,6 +80,12 @@ test("the mobile menu closes on Escape and restores focus", async ({ page }) => 
   await toggle.click();
   await expect(menu).toBeVisible();
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  const links = page.locator(".mobile-menu nav a");
+  await expect(links.first()).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(links.last()).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(links.first()).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
   await expect(toggle).toBeFocused();
@@ -154,6 +160,10 @@ test("the manifest lists three missions and the brief form completes", async ({ 
   await scrollTo(page, positions.manifest ?? 0);
   await expect(page.locator(".mission-row")).toHaveCount(3);
   await expect(page.locator(".mission-row").first()).toContainText("VESPER-01");
+  const heroWindow = await page.locator("[data-window-date]").first().textContent();
+  await expect(page.locator('[data-manifest-window="0"]')).toHaveText(
+    (heroWindow ?? "").slice(0, 11),
+  );
 
   await scrollTo(page, positions.contact ?? 0);
   const form = page.locator("[data-contact-form]");
@@ -295,4 +305,30 @@ test("axe finds no serious or critical violations in full and reduced motion", a
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-motion", "reduced");
   await audit();
+});
+
+
+test("the OS preference changes the pin and the toggle label live", async ({ page }) => {
+  const pinnedCount = async (): Promise<number> =>
+    page.evaluate(() => {
+      const debug = (
+        window as Window & {
+          __HALCYON_SCROLL__?: () => Array<{ pin: boolean }>;
+        }
+      ).__HALCYON_SCROLL__;
+      return debug ? debug().filter((trigger) => trigger.pin).length : -1;
+    });
+
+  await page.goto("/");
+  await expect.poll(pinnedCount).toBe(1);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "reduced");
+  await expect(page.locator("[data-motion-label]")).toHaveText("REDUCED");
+  await expect.poll(pinnedCount).toBe(0);
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "full");
+  await expect(page.locator("[data-motion-label]")).toHaveText("FULL");
+  await expect.poll(pinnedCount).toBe(1);
 });

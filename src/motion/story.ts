@@ -1,7 +1,8 @@
 import { ScrollSmoother, ScrollTrigger } from "./gsap";
 import { getMotionPreference } from "./preferences";
-import { telemetryForProgress } from "../mission/mission";
-import type { TelemetrySnapshot } from "../mission/types";
+import { clamp01 } from "../lib/math";
+import { ACT_META, telemetryForProgress } from "../mission/mission";
+import type { Act, TelemetrySnapshot } from "../mission/types";
 
 interface StorySegment {
   trigger: string;
@@ -18,21 +19,43 @@ export interface StoryCallbacks {
 }
 
 export interface StoryHandle {
-  smoother: ScrollSmoother | null;
   getProgress: () => number;
   setReduced: (reduced: boolean) => void;
   refresh: () => void;
   destroy: () => void;
 }
 
-const SEGMENTS: readonly StorySegment[] = [
-  { trigger: "#top", endTrigger: "#mission", end: "top top", from: 0, to: 0.18 },
-  { trigger: "#ascent", start: "top bottom", endTrigger: "#separation", end: "top top", from: 0.3, to: 0.56 },
-  { trigger: "#separation", endTrigger: "#orbit", end: "top top", from: 0.56, to: 0.72 },
-  { trigger: "#orbit", endTrigger: "#contact", end: "bottom bottom", from: 0.72, to: 1 },
-] as const;
+const actStart = (act: Act): number => ACT_META.find((entry) => entry.id === act)?.start ?? 0;
+const IGNITION_START = actStart("IGNITION");
+const ASCENT_START = actStart("ASCENT");
+const SEPARATION_START = actStart("SEPARATION");
+const ORBIT_START = actStart("ORBIT");
 
-const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
+const SEGMENTS: readonly StorySegment[] = [
+  { trigger: "#top", endTrigger: "#mission", end: "top top", from: 0, to: IGNITION_START },
+  {
+    trigger: "#ascent",
+    start: "top bottom",
+    endTrigger: "#separation",
+    end: "top top",
+    from: ASCENT_START,
+    to: SEPARATION_START,
+  },
+  {
+    trigger: "#separation",
+    endTrigger: "#orbit",
+    end: "top top",
+    from: SEPARATION_START,
+    to: ORBIT_START,
+  },
+  {
+    trigger: "#orbit",
+    endTrigger: "#contact",
+    end: "bottom bottom",
+    from: ORBIT_START,
+    to: 1,
+  },
+] as const;
 
 export const initStory = (callbacks: StoryCallbacks): StoryHandle => {
   let reduced = getMotionPreference() === "reduced";
@@ -40,7 +63,7 @@ export const initStory = (callbacks: StoryCallbacks): StoryHandle => {
   let smoother: ScrollSmoother | null = null;
   let current = 0;
   let currentAct = "";
-  let pinTrigger: ScrollTrigger | null = null;
+  let launchTrigger: ScrollTrigger | null = null;
   const triggers: ScrollTrigger[] = [];
 
   ScrollTrigger.config({ ignoreMobileResize: true });
@@ -69,32 +92,43 @@ export const initStory = (callbacks: StoryCallbacks): StoryHandle => {
     }
   };
 
-  if (!reduced) {
-    pinTrigger = ScrollTrigger.create({
+  const launchValue = (segmentProgress: number): number =>
+    IGNITION_START + (ASCENT_START - IGNITION_START) * segmentProgress;
+
+  /**
+   * The launch section is pinned only in full motion. Reduced motion uses a
+   * normal scroll trigger so the same countdown still advances without a pin.
+   * The trigger is rebuilt on a live motion toggle so both directions agree.
+   */
+  const createLaunchTrigger = (): void => {
+    launchTrigger?.kill();
+    if (reduced) {
+      launchTrigger = ScrollTrigger.create({
+        trigger: "#mission",
+        start: "top top",
+        endTrigger: "#ascent",
+        end: "top bottom",
+        onUpdate: (self) => emit(launchValue(self.progress)),
+        onLeave: () => emit(ASCENT_START),
+        onLeaveBack: () => emit(IGNITION_START),
+      });
+      return;
+    }
+
+    launchTrigger = ScrollTrigger.create({
       trigger: ".launch",
       start: "top top",
       end: "+=140%",
       pin: true,
       pinSpacing: true,
       anticipatePin: 1,
-      onUpdate: (self) => emit(0.18 + (0.3 - 0.18) * self.progress),
-      onLeave: () => emit(0.3),
-      onLeaveBack: () => emit(0.18),
+      onUpdate: (self) => emit(launchValue(self.progress)),
+      onLeave: () => emit(ASCENT_START),
+      onLeaveBack: () => emit(IGNITION_START),
     });
-  }
+  };
 
-  let launchFallback: ScrollTrigger | null = null;
-  if (reduced) {
-    launchFallback = ScrollTrigger.create({
-      trigger: "#mission",
-      start: "top top",
-      endTrigger: "#ascent",
-      end: "top bottom",
-      onUpdate: (self) => emit(0.18 + (0.3 - 0.18) * self.progress),
-      onLeave: () => emit(0.3),
-      onLeaveBack: () => emit(0.18),
-    });
-  }
+  createLaunchTrigger();
 
   for (const segment of SEGMENTS) {
     const trigger = ScrollTrigger.create({
@@ -127,10 +161,7 @@ export const initStory = (callbacks: StoryCallbacks): StoryHandle => {
 
   window.addEventListener("resize", onResize, { passive: true });
 
-  const onFonts = (): void => {
-    void document.fonts.ready.then(() => refresh());
-  };
-  onFonts();
+  void document.fonts.ready.then(() => refresh());
 
   const onMenu = (event: Event): void => {
     const detail = (event as CustomEvent<{ open?: boolean }>).detail;
@@ -142,8 +173,7 @@ export const initStory = (callbacks: StoryCallbacks): StoryHandle => {
     window.removeEventListener("resize", onResize);
     document.removeEventListener("halcyon:menu", onMenu);
     triggers.forEach((trigger) => trigger.kill());
-    pinTrigger?.kill();
-    launchFallback?.kill();
+    launchTrigger?.kill();
     smoother?.kill();
     smoother = null;
   };
@@ -164,18 +194,20 @@ export const initStory = (callbacks: StoryCallbacks): StoryHandle => {
     if (value === reduced) return;
     reduced = value;
     const scrollY = window.scrollY;
+
     if (value) {
       smoother?.kill();
       smoother = null;
-      window.scrollTo(0, scrollY);
     } else {
       createSmoother();
     }
+
+    createLaunchTrigger();
     ScrollTrigger.refresh();
+    window.scrollTo(0, scrollY);
   };
 
   return {
-    smoother,
     getProgress: () => current,
     setReduced,
     refresh,

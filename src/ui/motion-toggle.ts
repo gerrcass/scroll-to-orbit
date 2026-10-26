@@ -1,4 +1,4 @@
-import { getMotionPreference, setMotionPreference } from "../motion/preferences";
+import { getMotionPreference, setMotionPreference, subscribeMotion } from "../motion/preferences";
 
 export const initMotionToggle = (): void => {
   const buttons = document.querySelectorAll<HTMLButtonElement>("[data-motion-toggle]");
@@ -18,10 +18,10 @@ export const initMotionToggle = (): void => {
     button.addEventListener("click", () => {
       const next = getMotionPreference() === "full" ? "reduced" : "full";
       setMotionPreference(next);
-      document.dispatchEvent(new CustomEvent("halcyon:motion", { detail: { preference: next } }));
       render();
     });
   });
 
   render();
+  subscribeMotion(() => render());
 };

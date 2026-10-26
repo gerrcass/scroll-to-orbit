@@ -7,6 +7,7 @@ import { initStory } from "./motion/story";
 import { reducedStillForAct } from "./mission/mission";
 import type { TelemetrySnapshot } from "./mission/types";
 import { createStage, type Stage } from "./scene/Stage";
+import { updateAtmosphere } from "./ui/atmosphere";
 import { initActRail } from "./ui/act-rail";
 import { initBackToTop } from "./ui/back-to-top";
 import { initContact } from "./ui/contact";
@@ -54,6 +55,7 @@ const boot = (): void => {
 
   const actRail = initActRail();
   const telemetry = initTelemetry();
+  const stageCanvas = document.querySelector<HTMLCanvasElement>("#stage");
   const stageInstance = stage();
   let storyProgress = 0;
   let lastSnapshot: TelemetrySnapshot | null = null;
@@ -62,11 +64,17 @@ const boot = (): void => {
     onProgress: (progress, snapshot) => {
       storyProgress = progress;
       lastSnapshot = snapshot;
-      if (getMotionPreference() === "reduced") {
-        stageInstance?.setReducedStill(reducedStillForAct(snapshot.act));
+      const reduced = getMotionPreference() === "reduced";
+      const still = reduced ? reducedStillForAct(snapshot.act) : progress;
+      updateAtmosphere(still);
+      if (reduced) {
+        stageInstance?.setReducedStill(still);
+        if (stageCanvas) stageCanvas.dataset.viewProgress = still.toFixed(3);
       } else {
         stageInstance?.setProgress(progress);
+        if (stageCanvas) stageCanvas.dataset.viewProgress = progress.toFixed(3);
       }
+      if (stageCanvas) stageCanvas.dataset.progress = progress.toFixed(3);
       telemetry.update(progress, snapshot);
       actRail.update(progress);
     },
@@ -76,7 +84,12 @@ const boot = (): void => {
     const reduced = preference === "reduced";
     stageInstance?.setReduced(reduced);
     if (reduced) {
-      stageInstance?.setReducedStill(reducedStillForAct(lastSnapshot?.act ?? "PAD"));
+      const still = reducedStillForAct(lastSnapshot?.act ?? "PAD");
+      stageInstance?.setReducedStill(still);
+      updateAtmosphere(still);
+      if (stageCanvas) stageCanvas.dataset.viewProgress = still.toFixed(3);
+    } else {
+      updateAtmosphere(storyProgress);
     }
     story.setReduced(reduced);
   });

@@ -101,7 +101,7 @@ export const initVehicle = (): void => {
           drawSVG: "100%",
           duration: 1.35,
           stagger: 0.08,
-          ease: "power2.inOut",
+          ease: "expoScale(1, 1.2)",
         },
       );
       gsap.fromTo(

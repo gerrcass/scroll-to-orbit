@@ -30,9 +30,9 @@ export const initHeroIntro = (): void => {
   timeline
     .to("[data-hero-eyebrow]", { autoAlpha: 1, y: 0, duration: 0.85 }, 0)
     .to(".hero .line__inner", { yPercent: 0, duration: 1.35, stagger: 0.13 }, 0.08)
-    .to("[data-hero-lede]", { autoAlpha: 1, y: 0, duration: 1 }, 0.62)
-    .to("[data-hero-actions] > *", { autoAlpha: 1, y: 0, duration: 0.85, stagger: 0.08 }, 0.78)
-    .to("[data-hero-hud]", { autoAlpha: 1, y: 0, duration: 1 }, 0.5)
+    .to("[data-hero-lede]", { autoAlpha: 1, y: 0, duration: 1, ease: "camera-settle" }, 0.62)
+    .to("[data-hero-actions] > *", { autoAlpha: 1, y: 0, duration: 0.85, stagger: 0.08, ease: "ignition" }, 0.78)
+    .to("[data-hero-hud]", { autoAlpha: 1, y: 0, duration: 1, ease: "camera-settle" }, 0.5)
     .to(".hero__foot > *", { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.06 }, 0.95);
 
   const onResize = (): void => {

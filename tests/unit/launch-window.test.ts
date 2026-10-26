@@ -5,6 +5,7 @@ import {
   formatCountdownCompact,
   formatCountdownLong,
   formatCountdownPadded,
+  formatManifestDate,
   formatWindowDate,
   nextLaunchWindow,
 } from "../../src/mission/launch-window";
@@ -59,5 +60,13 @@ describe("countdown formatting", () => {
 
   it("formats the launch window in UTC", () => {
     expect(formatWindowDate(new Date("2026-11-08T03:14:00Z"))).toBe("08 NOV 2026 · 03:14 UTC");
+  });
+});
+
+
+describe("formatManifestDate", () => {
+  it("formats the manifest without the launch time", () => {
+    expect(formatManifestDate(new Date("2026-11-08T03:14:00Z"))).toBe("08 NOV 2026");
+    expect(formatManifestDate(new Date("2026-12-05T23:59:00Z"))).toBe("05 DEC 2026");
   });
 });

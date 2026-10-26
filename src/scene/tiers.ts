@@ -38,4 +38,3 @@ export const detectTier = (): SceneTier => {
   };
 };
 
-export const isFinePointer = (): boolean => window.matchMedia("(pointer: fine)").matches;

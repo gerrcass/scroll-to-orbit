@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
     "test:e2e": "playwright test",
     "evidence": "pnpm build && tsx scripts/capture-evidence.ts",
     "format": "prettier --write ."

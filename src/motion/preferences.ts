@@ -25,6 +25,16 @@ const apply = (preference: MotionPreference): void => {
   document.documentElement.dataset.motion = preference;
 };
 
+const notify = (preference: MotionPreference): void => {
+  apply(preference);
+  listeners.forEach((listener) => listener(preference));
+  if (typeof document !== "undefined") {
+    document.dispatchEvent(
+      new CustomEvent("halcyon:motion", { detail: { preference } }),
+    );
+  }
+};
+
 export const getMotionPreference = (): MotionPreference => {
   if (current) return current;
   current = readStored() ?? osPreference();
@@ -37,7 +47,6 @@ export const setMotionPreference = (
   persist = true,
 ): MotionPreference => {
   current = preference;
-  apply(preference);
   if (persist) {
     try {
       window.localStorage.setItem(STORAGE_KEY, preference);
@@ -45,7 +54,7 @@ export const setMotionPreference = (
       // Storage can be disabled; the preference still applies for this session.
     }
   }
-  listeners.forEach((listener) => listener(preference));
+  notify(preference);
   return preference;
 };
 
@@ -65,8 +74,7 @@ export const initMotionPreference = (): MotionPreference => {
   query?.addEventListener("change", (event) => {
     if (readStored()) return;
     current = event.matches ? "reduced" : "full";
-    apply(current);
-    listeners.forEach((listener) => listener(current as MotionPreference));
+    notify(current);
   });
   return preference;
 };

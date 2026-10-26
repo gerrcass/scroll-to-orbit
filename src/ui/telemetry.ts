@@ -1,7 +1,10 @@
 import { gsap } from "../motion/gsap";
+import { clamp01 } from "../lib/math";
+import { setText } from "../lib/dom";
 import { getMotionPreference } from "../motion/preferences";
 import { launchSequenceForSeconds } from "../mission/launch-sequence";
 import {
+  ACT_META,
   formatAltitude,
   formatDownrange,
   formatMissionClock,
@@ -18,11 +21,6 @@ export interface TelemetryUI {
   update: (progress: number, snapshot: TelemetrySnapshot) => void;
 }
 
-const setText = (element: Element, value: string): void => {
-  if (element.textContent !== value) element.textContent = value;
-};
-
-const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
 export const initTelemetry = (): TelemetryUI => {
   const telemetryValues = new Map<string, Element[]>();
@@ -70,7 +68,9 @@ export const initTelemetry = (): TelemetryUI => {
 
     const launch = launchSequenceForSeconds(snapshot.missionTimeSeconds);
     if (launchProgress) {
-      const value = clamp01((progress - 0.18) / 0.12);
+      const ignitionStart = ACT_META.find((entry) => entry.id === "IGNITION")?.start ?? 0.18;
+      const ascentStart = ACT_META.find((entry) => entry.id === "ASCENT")?.start ?? 0.3;
+      const value = clamp01((progress - ignitionStart) / (ascentStart - ignitionStart));
       launchProgress.style.transform = `scaleX(${value.toFixed(4)})`;
     }
     if (launchStep) setText(launchStep, launch.label);
@@ -93,7 +93,7 @@ export const initTelemetry = (): TelemetryUI => {
         gsap.to(launchStatus, {
           text: { value: launch.status },
           duration: 0.5,
-          ease: "none",
+          ease: "rough({strength: 1, points: 10, taper: none, randomize: true})",
           overwrite: true,
         });
       }

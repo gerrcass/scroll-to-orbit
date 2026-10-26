@@ -2,10 +2,12 @@ import * as THREE from "three";
 import { gsap } from "../motion/gsap";
 import { getMotionPreference } from "../motion/preferences";
 import {
+  SCENE_EVENTS,
   ignitionEnvelope,
   rocketLiftForProgress,
   throttleForProgress,
 } from "../mission/mission";
+import { clamp01, inverseLerp } from "../lib/math";
 import { CameraRig } from "./camera-rig";
 import { createPad, type PadModel } from "./pad";
 import { createRocket, type KestrelModel } from "./rocket";
@@ -16,22 +18,12 @@ import { createEarth, type EarthModel } from "./earth";
 import { createStarField, type StarField } from "./stars";
 import { detectTier, type SceneTier } from "./tiers";
 
-const lerp = (from: number, to: number, t: number): number => from + (to - from) * t;
-const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
-const inverseLerp = (from: number, to: number, value: number): number =>
-  from === to ? 0 : clamp01((value - from) / (to - from));
-
-export interface StageOptions {
-  onFrame?: (progress: number) => void;
-}
-
 export class Stage {
   readonly renderer: THREE.WebGLRenderer;
   readonly scene: THREE.Scene;
   readonly camera: THREE.PerspectiveCamera;
   readonly tier: SceneTier;
 
-  private readonly canvas: HTMLCanvasElement;
   private readonly rig: CameraRig;
   private readonly rocket: KestrelModel;
   private readonly pad: PadModel;
@@ -43,7 +35,6 @@ export class Stage {
   private readonly ignitionGlowTexture: THREE.CanvasTexture;
   private readonly padFlash: THREE.PointLight;
   private moon: THREE.Mesh | null = null;
-  private readonly options: StageOptions;
   private lastTimestamp = 0;
 
   private progress = 0;
@@ -60,10 +51,9 @@ export class Stage {
   private frameAccumulator = 0;
   private frameCount = 0;
   private lastDprChange = 0;
-  private lastSky = -1;
   private reducedStill = 0.04;
   private needsRender = false;
-  private lastCanvasUpdate = 0;
+  private lastViewProgress = 0;
   private lastFps = 60;
   private readonly onResize = (): void => this.resize();
   private readonly onPointer = (event: PointerEvent): void => {
@@ -75,9 +65,7 @@ export class Stage {
     this.lastTimestamp = performance.now();
   };
 
-  constructor(canvas: HTMLCanvasElement, options: StageOptions = {}) {
-    this.canvas = canvas;
-    this.options = options;
+  constructor(canvas: HTMLCanvasElement) {
     this.tier = detectTier();
     this.reduced = getMotionPreference() === "reduced";
 
@@ -150,7 +138,7 @@ export class Stage {
 
     this.setProgressFromUrl();
     this.resize();
-    this.applyProgress(true);
+    this.applyProgress();
 
     if (import.meta.env.DEV) {
       (window as Window & {
@@ -171,7 +159,7 @@ export class Stage {
         smokeCount: this.smoke.points.geometry.getAttribute("position").count,
         rocketY: this.rocket.group.position.y,
         progress: this.progress,
-        viewProgress: this.canvas.dataset.viewProgress,
+        viewProgress: this.lastViewProgress.toFixed(3),
         fps: this.lastFps,
         dpr: this.currentDpr,
         tier: this.tier.name,
@@ -232,7 +220,7 @@ export class Stage {
     if (immediate) {
       this.progress = this.targetProgress;
       this.rig.reset(this.progress);
-      this.applyProgress(true);
+      this.applyProgress();
       this.render();
     }
   }
@@ -244,7 +232,7 @@ export class Stage {
       this.applyReducedStill();
     } else {
       this.rig.reset(this.progress);
-      this.applyProgress(true);
+      this.applyProgress();
       this.updateEffects(this.progress);
       this.render();
     }
@@ -300,7 +288,7 @@ export class Stage {
     this.pointerY += (this.pointerTargetY - this.pointerY) * Math.min(1, delta * 3.8);
 
     const viewProgress = this.progress;
-    this.applyProgress(false);
+    this.applyProgress();
     const throttle = throttleForProgress(viewProgress);
     const ignition = ignitionEnvelope(viewProgress);
     const shake = ignition * 0.12 + (viewProgress > 0.3 && viewProgress < 0.56 ? throttle * 0.022 : 0);
@@ -315,12 +303,11 @@ export class Stage {
     this.render();
 
     this.trackPerformance(delta);
-    this.options.onFrame?.(this.progress);
   };
 
   private applyReducedStill(): void {
     const progress = this.reducedStill;
-    this.applyProgress(true);
+    this.applyProgress();
     this.rig.reset(progress);
     this.updateEffects(progress);
     this.render();
@@ -335,7 +322,7 @@ export class Stage {
       clamp01((viewProgress - 0.18) / 0.04) * (1 - inverseLerp(0.6, 0.86, viewProgress));
     this.smoke.material.uniforms.uTime!.value = this.time;
     this.smoke.material.uniforms.uIgnition!.value = smokeAmount;
-    const showSmoke = !this.reduced && viewProgress < 0.7 && smokeAmount > 0.002;
+    const showSmoke = !this.reduced && viewProgress < SCENE_EVENTS.padHidden && smokeAmount > 0.002;
     this.smoke.points.visible = showSmoke;
     this.smokeCloud.update(showSmoke ? smokeAmount : 0, this.time);
 
@@ -346,11 +333,18 @@ export class Stage {
     this.earth.update(viewProgress, this.time);
   }
 
-  private applyProgress(force: boolean): void {
+  private applyProgress(): void {
     const progress = this.reduced ? this.reducedStill : this.progress;
     const lift = rocketLiftForProgress(progress);
     const throttle = throttleForProgress(progress) * (progress > 0.16 ? 1 : 0);
-    const boosterThrottle = throttle * (1 - inverseLerp(0.58, 0.64, progress));
+    const boosterThrottle =
+      throttle *
+      (1 -
+        inverseLerp(
+          SCENE_EVENTS.boosterCutoff.start,
+          SCENE_EVENTS.boosterCutoff.end,
+          progress,
+        ));
 
     this.rocket.setLift(lift);
     this.rocket.setThrottle(boosterThrottle, this.time);
@@ -359,36 +353,28 @@ export class Stage {
     this.rocket.group.position.x = Math.sin(this.time * 47.0) * 0.012 * vibration;
     this.rocket.group.rotation.z = Math.sin(this.time * 53.0) * 0.007 * vibration;
 
-    this.pad.group.visible = progress < 0.69;
+    this.pad.group.visible = progress < SCENE_EVENTS.padHidden;
 
-    const separation = inverseLerp(0.58, 0.72, progress);
+    const separation = inverseLerp(
+      SCENE_EVENTS.stageSeparation.start,
+      SCENE_EVENTS.stageSeparation.end,
+      progress,
+    );
     this.rocket.setStageSeparation(separation);
-    const fairing = inverseLerp(0.7, 0.79, progress);
+    const fairing = inverseLerp(SCENE_EVENTS.fairing.start, SCENE_EVENTS.fairing.end, progress);
     this.rocket.setFairingOpen(fairing);
-    const deploy = inverseLerp(0.77, 0.88, progress);
+    const deploy = inverseLerp(SCENE_EVENTS.payload.start, SCENE_EVENTS.payload.end, progress);
     this.rocket.setSatelliteDeploy(deploy);
 
     this.pad.shadow.material.opacity = 0.72 * (1 - clamp01(lift / 14));
     this.pad.floodlight.intensity = 80 * (1 - clamp01(lift / 20) * 0.4);
-
-    const ember = lerp(0.16, 0.015, clamp01(progress * 1.5));
-    const cold = lerp(0.2, 0.95, clamp01((progress - 0.2) * 1.3));
-    if (force || Math.abs(progress - this.lastSky) > 0.01) {
-      document.documentElement.style.setProperty("--sky-ember", ember.toFixed(3));
-      document.documentElement.style.setProperty("--sky-cold", cold.toFixed(3));
-      this.lastSky = progress;
-    }
 
     const ignition = ignitionEnvelope(progress);
     if (!this.reduced && ignition > 0.01) {
       this.pad.group.position.x = (Math.random() - 0.5) * ignition * 0.012;
     }
 
-    if (force || this.time - this.lastCanvasUpdate > 0.15) {
-      this.canvas.dataset.progress = this.progress.toFixed(3);
-      this.canvas.dataset.viewProgress = progress.toFixed(3);
-      this.lastCanvasUpdate = this.time;
-    }
+    this.lastViewProgress = progress;
   }
 
   private render(): void {
@@ -448,5 +434,4 @@ export class Stage {
   }
 }
 
-export const createStage = (canvas: HTMLCanvasElement, options?: StageOptions): Stage =>
-  new Stage(canvas, options);
+export const createStage = (canvas: HTMLCanvasElement): Stage => new Stage(canvas);
