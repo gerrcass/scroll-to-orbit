@@ -7,10 +7,12 @@ import { initStory } from "./motion/story";
 import { createStage, type Stage } from "./scene/Stage";
 import { initActRail } from "./ui/act-rail";
 import { initBackToTop } from "./ui/back-to-top";
+import { initContact } from "./ui/contact";
 import { initCountdown } from "./ui/countdown";
 import { initCursor } from "./ui/cursor";
 import { initHeaderState } from "./ui/header-state";
 import { initHeroIntro } from "./ui/hero-intro";
+import { initMagnetic } from "./ui/magnetic";
 import { initMenu } from "./ui/menu";
 import { initMotionToggle } from "./ui/motion-toggle";
 import { initScrollLinks, scrollToHash } from "./ui/scroll-links";
@@ -42,7 +44,9 @@ const boot = (): void => {
   initMotionPreference();
   initCountdown();
   initMenu();
+  initContact();
   initCursor();
+  initMagnetic();
   initMotionToggle();
   initBackToTop();
 
