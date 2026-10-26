@@ -19,7 +19,7 @@ export const ORBIT_PROFILES: readonly OrbitProfile[] = [
     inclinationDeg: 98.2,
     payloadKg: 1180,
     periodMin: 99,
-    angleDeg: 122,
+    angleDeg: 120,
     blurb: "Dawn-to-dusk lane. The same light on every pass.",
   },
   {
@@ -29,7 +29,7 @@ export const ORBIT_PROFILES: readonly OrbitProfile[] = [
     inclinationDeg: 27,
     payloadKg: 450,
     periodMin: 720,
-    angleDeg: 238,
+    angleDeg: 240,
     blurb: "The high road for communications payloads that need to hold their ground.",
   },
 ] as const;

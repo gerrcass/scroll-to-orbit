@@ -112,3 +112,32 @@ test("the vehicle schematic morphs into the recovery profile", async ({ page }) 
   const after = await page.locator("[data-flight-profile]").getAttribute("d");
   expect(after).not.toBe(before);
 });
+
+
+test("the orbit dial is keyboard operable and rewrites the map", async ({ page }) => {
+  await page.goto("/");
+  const positions = await offsets(page);
+  await scrollTo(page, (positions.orbit ?? 0) + 400);
+
+  const knob = page.locator("[data-dial-knob]");
+  await expect(knob).toHaveAttribute("aria-valuenow", "1");
+  await expect(knob).toBeVisible();
+  await knob.focus();
+  await expect(knob).toBeFocused();
+
+  const satelliteBefore = await page.locator("[data-orbit-sat]").getAttribute("transform");
+  await page.waitForTimeout(900);
+  const satelliteAfter = await page.locator("[data-orbit-sat]").getAttribute("transform");
+  expect(satelliteAfter).not.toBe(satelliteBefore);
+
+  await page.keyboard.press("ArrowRight");
+  await expect(knob).toHaveAttribute("aria-valuenow", "2");
+  await expect(page.locator('[data-dial="name"]')).toHaveText("GTO");
+  await expect(page.locator('[data-dial="altitude"]')).toHaveText("35,786");
+  await expect(page.locator('[data-orbit-path="GTO"]')).toHaveAttribute("stroke", "#ff5a1f");
+
+  await page.keyboard.press("Home");
+  await expect(knob).toHaveAttribute("aria-valuenow", "0");
+  await expect(page.locator('[data-dial="name"]')).toHaveText("LEO");
+  await expect(page.locator('[data-dial="altitude"]')).toHaveText("550");
+});

@@ -12,6 +12,7 @@ import { createRocket, type KestrelModel } from "./rocket";
 import { createSmoke, type SmokeSystem } from "./smoke";
 import { createSmokeCloud, type SmokeCloud } from "./smoke-cloud";
 import { createGlowTexture } from "./textures";
+import { createEarth, type EarthModel } from "./earth";
 import { createStarField, type StarField } from "./stars";
 import { detectTier, type SceneTier } from "./tiers";
 
@@ -37,6 +38,7 @@ export class Stage {
   private readonly stars: StarField;
   private readonly smoke: SmokeSystem;
   private readonly smokeCloud: SmokeCloud;
+  private readonly earth: EarthModel;
   private readonly ignitionGlow: THREE.Sprite;
   private readonly ignitionGlowTexture: THREE.CanvasTexture;
   private readonly padFlash: THREE.PointLight;
@@ -133,6 +135,9 @@ export class Stage {
     this.padFlash = new THREE.PointLight(0xff7b3a, 0, 32, 2);
     this.padFlash.position.set(0, 2.2, 3);
     this.scene.add(this.padFlash);
+
+    this.earth = createEarth(window.innerWidth < 760 ? 56 : 80);
+    this.scene.add(this.earth.group, this.earth.sunLight, this.earth.sunLight.target);
 
     this.addLights();
     this.addMoon();
@@ -267,11 +272,13 @@ export class Stage {
       clamp01((viewProgress - 0.18) / 0.04) * (1 - inverseLerp(0.6, 0.86, viewProgress));
     this.smoke.material.uniforms.uTime!.value = this.time;
     this.smoke.material.uniforms.uIgnition!.value = smokeAmount;
-    this.smoke.points.visible = !this.reduced && smokeAmount > 0.002;
-    this.smokeCloud.update(this.reduced ? 0 : smokeAmount, this.time);
+    const showSmoke = !this.reduced && viewProgress < 0.7 && smokeAmount > 0.002;
+    this.smoke.points.visible = showSmoke;
+    this.smokeCloud.update(showSmoke ? smokeAmount : 0, this.time);
     this.ignitionGlow.material.opacity = this.reduced ? 0 : ignition * 0.85;
     this.ignitionGlow.scale.set(7 + ignition * 3, 4 + ignition * 2, 1);
     this.padFlash.intensity = this.reduced ? 0 : ignition * 120;
+    this.earth.update(viewProgress, this.time);
     this.render();
 
     this.trackPerformance(delta);
@@ -290,6 +297,8 @@ export class Stage {
     const vibration = this.reduced ? 0 : ignitionEnvelope(progress);
     this.rocket.group.position.x = Math.sin(this.time * 47.0) * 0.012 * vibration;
     this.rocket.group.rotation.z = Math.sin(this.time * 53.0) * 0.007 * vibration;
+
+    this.pad.group.visible = progress < 0.69;
 
     const separation = inverseLerp(0.58, 0.72, progress);
     this.rocket.setStageSeparation(separation);
@@ -363,6 +372,7 @@ export class Stage {
     this.stars.dispose();
     this.smoke.dispose();
     this.smokeCloud.dispose();
+    this.earth.dispose();
     this.ignitionGlowTexture.dispose();
     this.renderer.dispose();
   }

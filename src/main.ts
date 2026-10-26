@@ -15,6 +15,7 @@ import { initMenu } from "./ui/menu";
 import { initMotionToggle } from "./ui/motion-toggle";
 import { initScrollLinks, scrollToHash } from "./ui/scroll-links";
 import { initTelemetry } from "./ui/telemetry";
+import { initOrbit } from "./ui/orbit";
 import { initVehicle } from "./ui/vehicle";
 
 const stage = (): Stage | null => {
@@ -69,6 +70,7 @@ const boot = (): void => {
   initHeaderState();
   initReveals();
   initVehicle();
+  initOrbit();
   initMarquee();
   initHeroIntro();
   story.refresh();

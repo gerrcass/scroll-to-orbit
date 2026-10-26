@@ -177,8 +177,8 @@ h3 {
 }
 
 .display--cta {
-  max-width: 11ch;
-  font-size: clamp(3.2rem, 7.2vw, 8.4rem);
+  max-width: 13ch;
+  font-size: clamp(3.1rem, 6.6vw, 7.8rem);
 }
 
 .line {
