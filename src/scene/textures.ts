@@ -149,3 +149,38 @@ export const createDeckTexture = (): THREE.CanvasTexture => {
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
 };
+
+
+export const createSmokeTexture = (): THREE.CanvasTexture => {
+  const [element, context] = canvas(256, 256);
+  const random = seeded(404);
+
+  context.clearRect(0, 0, 256, 256);
+  context.globalCompositeOperation = "lighter";
+
+  for (let index = 0; index < 72; index += 1) {
+    const x = 30 + random() * 196;
+    const y = 30 + random() * 196;
+    const radius = 12 + random() * 52;
+    const alpha = 0.035 + random() * 0.08;
+    const gradient = context.createRadialGradient(x, y, 0, x, y, radius);
+    gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+    gradient.addColorStop(0.55, `rgba(255, 255, 255, ${alpha * 0.55})`);
+    gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 256, 256);
+  }
+
+  context.globalCompositeOperation = "destination-in";
+  const fade = context.createRadialGradient(128, 128, 12, 128, 128, 128);
+  fade.addColorStop(0, "rgba(255, 255, 255, 1)");
+  fade.addColorStop(0.58, "rgba(255, 255, 255, 0.92)");
+  fade.addColorStop(1, "rgba(255, 255, 255, 0)");
+  context.fillStyle = fade;
+  context.fillRect(0, 0, 256, 256);
+  context.globalCompositeOperation = "source-over";
+
+  const texture = new THREE.CanvasTexture(element);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+};

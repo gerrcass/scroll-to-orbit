@@ -33,7 +33,7 @@ export const detectTier = (): SceneTier => {
     maxDpr,
     antialias: name !== "low",
     starCount: name === "high" ? 5200 : name === "mid" ? 3200 : 1800,
-    smokeCount: name === "high" ? 620 : name === "mid" ? 380 : 220,
+    smokeCount: name === "high" ? 360 : name === "mid" ? 260 : 160,
     shadow: name !== "low",
   };
 };

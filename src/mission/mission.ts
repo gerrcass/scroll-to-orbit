@@ -1,4 +1,4 @@
-import { clamp01, easeInCubic, easeOutCubic, inverseLerp, lerp, round } from "../lib/math";
+import { clamp01, easeOutCubic, inverseLerp, lerp, round } from "../lib/math";
 import type { Act, ActMeta, Stage, TelemetrySnapshot } from "./types";
 
 export const ACT_META: readonly ActMeta[] = [
@@ -47,7 +47,7 @@ export const actForProgress = (progress: number): Act => {
   const p = clamp01(progress);
   for (let index = ACT_META.length - 1; index >= 0; index -= 1) {
     const act = ACT_META[index];
-    if (act && p >= act.start) return act.id;
+    if (act && p >= act.start - 0.0002) return act.id;
   }
   return "PAD";
 };
@@ -122,7 +122,10 @@ export const telemetryForProgress = (progress: number): TelemetrySnapshot => {
 export const rocketLiftForProgress = (progress: number): number => {
   const p = clamp01(progress);
   if (p <= 0.3) return 0;
-  if (p <= 0.72) return lerp(0, 44, easeInCubic(inverseLerp(0.3, 0.72, p)));
+  if (p <= 0.72) {
+    const t = inverseLerp(0.3, 0.72, p);
+    return lerp(0, 44, 1 - Math.pow(1 - t, 2));
+  }
   return lerp(44, 52, easeOutCubic(inverseLerp(0.72, 1, p)));
 };
 

@@ -9,6 +9,9 @@ import {
 import { CameraRig } from "./camera-rig";
 import { createPad, type PadModel } from "./pad";
 import { createRocket, type KestrelModel } from "./rocket";
+import { createSmoke, type SmokeSystem } from "./smoke";
+import { createSmokeCloud, type SmokeCloud } from "./smoke-cloud";
+import { createGlowTexture } from "./textures";
 import { createStarField, type StarField } from "./stars";
 import { detectTier, type SceneTier } from "./tiers";
 
@@ -32,6 +35,11 @@ export class Stage {
   private readonly rocket: KestrelModel;
   private readonly pad: PadModel;
   private readonly stars: StarField;
+  private readonly smoke: SmokeSystem;
+  private readonly smokeCloud: SmokeCloud;
+  private readonly ignitionGlow: THREE.Sprite;
+  private readonly ignitionGlowTexture: THREE.CanvasTexture;
+  private readonly padFlash: THREE.PointLight;
   private moon: THREE.Mesh | null = null;
   private readonly options: StageOptions;
   private lastTimestamp = 0;
@@ -100,12 +108,49 @@ export class Stage {
     this.stars = createStarField(this.tier.starCount);
     this.scene.add(this.stars.points);
 
+    this.smoke = createSmoke(this.tier.smokeCount);
+    this.scene.add(this.smoke.points);
+
+    this.smokeCloud = createSmokeCloud(this.tier.name === "low" ? 18 : 34);
+    this.scene.add(this.smokeCloud.group);
+
+    this.ignitionGlowTexture = createGlowTexture();
+    this.ignitionGlow = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: this.ignitionGlowTexture,
+        color: 0xff6a2c,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    );
+    this.ignitionGlow.position.set(0, 1.5, 2.8);
+    this.ignitionGlow.scale.set(7, 4, 1);
+    this.ignitionGlow.renderOrder = 4;
+    this.scene.add(this.ignitionGlow);
+
+    this.padFlash = new THREE.PointLight(0xff7b3a, 0, 32, 2);
+    this.padFlash.position.set(0, 2.2, 3);
+    this.scene.add(this.padFlash);
+
     this.addLights();
     this.addMoon();
 
     this.setProgressFromUrl();
     this.resize();
     this.applyProgress(true);
+
+    if (import.meta.env.DEV) {
+      (window as Window & { __HALCYON_STAGE_DEBUG__?: () => unknown }).__HALCYON_STAGE_DEBUG__ = () => ({
+        smokeVisible: this.smoke.points.visible,
+        smokeIgnition: this.smoke.material.uniforms.uIgnition?.value,
+        smokeCount: this.smoke.points.geometry.getAttribute("position").count,
+        rocketY: this.rocket.group.position.y,
+        progress: this.progress,
+        viewProgress: this.canvas.dataset.viewProgress,
+      });
+    }
   }
 
   private addLights(): void {
@@ -120,6 +165,10 @@ export class Stage {
     rim.position.set(10, 9, -14);
     this.scene.add(rim);
 
+    const fill = new THREE.DirectionalLight(0xa9c7dd, 2.3);
+    fill.position.set(8, 32, 26);
+    this.scene.add(fill);
+
     const warm = new THREE.PointLight(0xff8b4d, 7, 22, 2);
     warm.position.set(-2, 3.4, 5.5);
     this.scene.add(warm);
@@ -127,14 +176,14 @@ export class Stage {
 
   private addMoon(): void {
     const moon = new THREE.Mesh(
-      new THREE.SphereGeometry(2.15, 24, 16),
+      new THREE.SphereGeometry(1.9, 24, 16),
       new THREE.MeshStandardMaterial({
         color: 0xb9b3a6,
         roughness: 1,
         metalness: 0,
       }),
     );
-    moon.position.set(-32, 31, -118);
+    moon.position.set(-52, 44, -138);
     moon.visible = window.innerWidth >= 760;
     this.moon = moon;
     this.scene.add(moon);
@@ -162,7 +211,9 @@ export class Stage {
 
   setReduced(reduced: boolean): void {
     this.reduced = reduced;
+    this.rig.reset(reduced ? 0.04 : this.progress);
     this.applyProgress(true);
+    this.render();
   }
 
   start(): void {
@@ -196,15 +247,31 @@ export class Stage {
     this.pointerX += (this.pointerTargetX - this.pointerX) * Math.min(1, delta * 3.8);
     this.pointerY += (this.pointerTargetY - this.pointerY) * Math.min(1, delta * 3.8);
 
+    const viewProgress = this.reduced ? 0.04 : this.progress;
     this.applyProgress(false);
+    const throttle = throttleForProgress(viewProgress);
+    const ignition = ignitionEnvelope(viewProgress);
+    const shake = this.reduced
+      ? 0
+      : ignition * 0.12 + (viewProgress > 0.3 && viewProgress < 0.56 ? throttle * 0.022 : 0);
     this.rig.update(
-      this.progress,
+      viewProgress,
       this.time,
       { x: this.pointerX, y: this.pointerY },
       this.reduced,
+      shake,
     );
     this.stars.material.uniforms.uTime!.value = this.time;
-    this.stars.points.rotation.y = this.progress * 0.16 + this.time * 0.0025;
+    this.stars.points.rotation.y = viewProgress * 0.16 + this.time * 0.0025;
+    const smokeAmount =
+      clamp01((viewProgress - 0.18) / 0.04) * (1 - inverseLerp(0.6, 0.86, viewProgress));
+    this.smoke.material.uniforms.uTime!.value = this.time;
+    this.smoke.material.uniforms.uIgnition!.value = smokeAmount;
+    this.smoke.points.visible = !this.reduced && smokeAmount > 0.002;
+    this.smokeCloud.update(this.reduced ? 0 : smokeAmount, this.time);
+    this.ignitionGlow.material.opacity = this.reduced ? 0 : ignition * 0.85;
+    this.ignitionGlow.scale.set(7 + ignition * 3, 4 + ignition * 2, 1);
+    this.padFlash.intensity = this.reduced ? 0 : ignition * 120;
     this.render();
 
     this.trackPerformance(delta);
@@ -212,12 +279,16 @@ export class Stage {
   };
 
   private applyProgress(force: boolean): void {
-    const progress = this.progress;
+    const progress = this.reduced ? 0.04 : this.progress;
     const lift = rocketLiftForProgress(progress);
     const throttle = throttleForProgress(progress) * (progress > 0.16 ? 1 : 0);
 
     this.rocket.setLift(lift);
     this.rocket.setThrottle(throttle, this.time);
+
+    const vibration = this.reduced ? 0 : ignitionEnvelope(progress);
+    this.rocket.group.position.x = Math.sin(this.time * 47.0) * 0.012 * vibration;
+    this.rocket.group.rotation.z = Math.sin(this.time * 53.0) * 0.007 * vibration;
 
     const separation = inverseLerp(0.6, 0.69, progress);
     this.rocket.setStageSeparation(separation * 0.92);
@@ -242,7 +313,8 @@ export class Stage {
       this.pad.group.position.x = (Math.random() - 0.5) * ignition * 0.012;
     }
 
-    this.canvas.dataset.progress = progress.toFixed(3);
+    this.canvas.dataset.progress = this.progress.toFixed(3);
+    this.canvas.dataset.viewProgress = progress.toFixed(3);
   }
 
   private render(): void {
@@ -288,6 +360,9 @@ export class Stage {
     this.rocket.dispose();
     this.pad.dispose();
     this.stars.dispose();
+    this.smoke.dispose();
+    this.smokeCloud.dispose();
+    this.ignitionGlowTexture.dispose();
     this.renderer.dispose();
   }
 }

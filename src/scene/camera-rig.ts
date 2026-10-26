@@ -23,6 +23,7 @@ export class CameraRig {
     time: number,
     pointer: PointerState,
     reducedMotion: boolean,
+    shake = 0,
   ): void {
     const key = cameraForProgress(progress);
     const calm = reducedMotion ? 0 : 1;
@@ -36,14 +37,17 @@ export class CameraRig {
     );
     this.drift.lerp(this.targetDrift, 0.04);
 
+    const shakeX = reducedMotion ? 0 : (Math.sin(time * 47.3) + Math.sin(time * 31.7) * 0.5) * shake;
+    const shakeY = reducedMotion ? 0 : (Math.cos(time * 41.1) + Math.sin(time * 27.3) * 0.5) * shake * 0.7;
+
     this.position.set(
-      (key.position[0] + this.drift.x) * (1 + portrait * 0.06),
-      key.position[1] + this.drift.y + portrait * 1.1,
+      (key.position[0] + this.drift.x + shakeX) * (1 + portrait * 0.06),
+      key.position[1] + this.drift.y + portrait * 1.1 + shakeY,
       (key.position[2] + this.drift.z) * distanceScale,
     );
     this.lookAt.set(
-      key.lookAt[0] * (1 - portrait) - 0.55 * portrait + this.drift.x * 0.45,
-      key.lookAt[1] + this.drift.y * 0.45 + portrait * 0.4,
+      key.lookAt[0] * (1 - portrait) - 0.55 * portrait + this.drift.x * 0.45 + shakeX * 0.5,
+      key.lookAt[1] + this.drift.y * 0.45 + portrait * 0.4 + shakeY * 0.5,
       key.lookAt[2],
     );
 
