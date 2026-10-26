@@ -345,7 +345,65 @@ export const createRocket = (): KestrelModel => {
   const engineLight = new THREE.PointLight(0xff5a1f, 0, 24, 1.8);
   engineLight.position.y = -0.2;
 
-  group.add(flame, engineLight);
+  booster.add(flame, engineLight);
+
+  const upperFlame = new THREE.Group();
+  const upperGlow = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: 0xff6a2c,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  upperGlow.scale.set(1.4, 2.4, 1);
+  upperGlow.position.y = 4.16;
+  upperGlow.renderOrder = 9;
+  const upperCore = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: 0xffd7a8,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  upperCore.scale.set(0.7, 1.7, 1);
+  upperCore.position.y = 4.12;
+  upperCore.renderOrder = 10;
+  upperFlame.add(upperGlow, upperCore);
+  upperFlame.visible = false;
+  upper.add(upperFlame);
+
+  const upperLight = new THREE.PointLight(0xff6a2c, 0, 10, 1.8);
+  upperLight.position.y = 4.1;
+  upper.add(upperLight);
+
+  const separationFlash = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: glowTexture,
+      color: 0xffe3c2,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  separationFlash.scale.set(4, 3, 1);
+  separationFlash.position.y = 4.35;
+  separationFlash.renderOrder = 11;
+  separationFlash.visible = false;
+  group.add(separationFlash);
+
+  const separationLight = new THREE.PointLight(0xffd7a8, 0, 20, 1.8);
+  separationLight.position.y = 4.35;
+  group.add(separationLight);
 
   // A soft highlight down the body pushes the silhouette away from the sky.
   const highlight = new THREE.Mesh(
@@ -398,9 +456,23 @@ export const createRocket = (): KestrelModel => {
 
   const setStageSeparation = (amount: number): void => {
     const t = Math.max(0, Math.min(1, amount));
-    booster.position.set(t * 1.9, -t * 2.3, t * 0.6);
-    booster.rotation.z = t * 0.22;
-    booster.rotation.x = t * -0.16;
+    booster.position.set(t * 4.0, -t * 11.0, t * 2.2);
+    booster.rotation.z = t * 0.62;
+    booster.rotation.x = t * -0.38;
+
+    const flash = Math.sin(t * Math.PI);
+    separationFlash.visible = flash > 0.01;
+    separationFlash.material.opacity = flash;
+    separationFlash.scale.set(4.2 + flash * 2.4, 2.6 + flash * 1.8, 1);
+    separationLight.intensity = flash * 45;
+
+    const upperIgnition = Math.max(0, Math.min(1, (t - 0.35) / 0.3));
+    upperFlame.visible = upperIgnition > 0.01;
+    upperGlow.material.opacity = upperIgnition * 0.75;
+    upperCore.material.opacity = upperIgnition * 0.88;
+    upperGlow.scale.set(1.2 + upperIgnition * 0.6, 2.2 + upperIgnition * 1.4, 1);
+    upperCore.scale.set(0.6 + upperIgnition * 0.3, 1.6 + upperIgnition * 1.0, 1);
+    upperLight.intensity = upperIgnition * 30;
   };
 
   const setFairingOpen = (amount: number): void => {
@@ -435,6 +507,9 @@ export const createRocket = (): KestrelModel => {
     engineGlowMaterial.dispose();
     outerFlameMaterial.dispose();
     innerFlameMaterial.dispose();
+    upperGlow.material.dispose();
+    upperCore.material.dispose();
+    separationFlash.material.dispose();
     engineBells.length = 0;
   };
 

@@ -282,16 +282,17 @@ export class Stage {
     const progress = this.reduced ? 0.04 : this.progress;
     const lift = rocketLiftForProgress(progress);
     const throttle = throttleForProgress(progress) * (progress > 0.16 ? 1 : 0);
+    const boosterThrottle = throttle * (1 - inverseLerp(0.58, 0.64, progress));
 
     this.rocket.setLift(lift);
-    this.rocket.setThrottle(throttle, this.time);
+    this.rocket.setThrottle(boosterThrottle, this.time);
 
     const vibration = this.reduced ? 0 : ignitionEnvelope(progress);
     this.rocket.group.position.x = Math.sin(this.time * 47.0) * 0.012 * vibration;
     this.rocket.group.rotation.z = Math.sin(this.time * 53.0) * 0.007 * vibration;
 
-    const separation = inverseLerp(0.6, 0.69, progress);
-    this.rocket.setStageSeparation(separation * 0.92);
+    const separation = inverseLerp(0.58, 0.72, progress);
+    this.rocket.setStageSeparation(separation);
     const fairing = inverseLerp(0.7, 0.79, progress);
     this.rocket.setFairingOpen(fairing);
     const deploy = inverseLerp(0.77, 0.88, progress);

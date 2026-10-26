@@ -15,6 +15,7 @@ import { initMenu } from "./ui/menu";
 import { initMotionToggle } from "./ui/motion-toggle";
 import { initScrollLinks, scrollToHash } from "./ui/scroll-links";
 import { initTelemetry } from "./ui/telemetry";
+import { initVehicle } from "./ui/vehicle";
 
 const stage = (): Stage | null => {
   const canvas = document.querySelector<HTMLCanvasElement>("#stage");
@@ -67,6 +68,7 @@ const boot = (): void => {
   initScrollLinks();
   initHeaderState();
   initReveals();
+  initVehicle();
   initMarquee();
   initHeroIntro();
   story.refresh();
