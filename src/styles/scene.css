@@ -1,0 +1,200 @@
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #05070a;
+  pointer-events: none;
+}
+
+.sky__dusk,
+.sky__glow,
+.sky__space {
+  position: absolute;
+  inset: 0;
+}
+
+.sky__dusk {
+  background:
+    radial-gradient(ellipse 68% 48% at 72% 68%, rgba(255, 90, 31, calc(var(--sky-ember) * 0.92)), transparent 62%),
+    radial-gradient(ellipse 54% 38% at 82% 76%, rgba(255, 163, 104, 0.13), transparent 66%),
+    radial-gradient(ellipse 120% 80% at 50% 110%, rgba(33, 57, 76, 0.52), transparent 70%),
+    #05070a;
+}
+
+.sky__glow {
+  top: auto;
+  bottom: -22vh;
+  height: 58vh;
+  background: radial-gradient(ellipse 60% 100% at 65% 100%, rgba(255, 111, 52, 0.22), transparent 65%);
+  opacity: calc(0.55 + var(--sky-ember));
+}
+
+.sky__space {
+  background:
+    radial-gradient(ellipse 40% 35% at 20% 12%, rgba(63, 103, 138, 0.12), transparent 70%),
+    radial-gradient(ellipse 35% 28% at 82% 20%, rgba(108, 80, 126, 0.09), transparent 70%);
+  opacity: 0.9;
+}
+
+.sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(242, 238, 229, 0.55) 0 0.6px, transparent 0.9px);
+  background-size: 191px 173px;
+  opacity: 0.18;
+  mask-image: linear-gradient(to bottom, #000, transparent 72%);
+}
+
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  touch-action: pan-y;
+  transition: opacity 900ms var(--ease-out);
+}
+
+html[data-webgl="true"] .stage {
+  opacity: 1;
+}
+
+html[data-webgl="false"] .stage {
+  display: none;
+}
+
+.webgl-poster {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 700ms ease;
+}
+
+html[data-webgl="true"] .webgl-poster {
+  opacity: 0;
+}
+
+.webgl-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.grain {
+  position: fixed;
+  inset: -50%;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 280 280' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 280px 280px;
+}
+
+@keyframes grain-shift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-3%, 2%);
+  }
+  40% {
+    transform: translate(2%, -3%);
+  }
+  60% {
+    transform: translate(-2%, -1%);
+  }
+  80% {
+    transform: translate(3%, 1%);
+  }
+}
+
+html[data-motion="reduced"] .grain {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain {
+    animation: none;
+  }
+}
+
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 70;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: difference;
+}
+
+.cursor__dot,
+.cursor__ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.cursor__dot {
+  width: 5px;
+  height: 5px;
+  background: var(--bone);
+}
+
+.cursor__ring {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(242, 238, 229, 0.65);
+  transition: width 300ms var(--ease-out), height 300ms var(--ease-out), border-color 300ms;
+}
+
+.cursor.is-active {
+  opacity: 1;
+}
+
+.cursor.is-hover .cursor__ring {
+  width: 58px;
+  height: 58px;
+  border-color: var(--ember);
+}
+
+.cursor.is-hover .cursor__dot {
+  background: var(--ember);
+}
+
+html[data-motion="reduced"] .cursor,
+html[data-webgl="false"] .cursor {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .cursor {
+    display: none;
+  }
+}
+
+
+html[data-webgl="false"] .orbit {
+  background:
+    radial-gradient(ellipse 80% 55% at 65% 100%, rgba(255, 90, 31, 0.2), transparent 70%),
+    linear-gradient(180deg, var(--ink), rgba(5, 7, 10, 0.5) 50%, var(--ink));
+}
+
+html[data-webgl="false"] .contact {
+  background:
+    radial-gradient(ellipse 70% 45% at 55% 82%, rgba(255, 90, 31, 0.22), transparent 70%),
+    linear-gradient(180deg, var(--ink), rgba(5, 7, 10, 0.5) 45%, var(--ink));
+}

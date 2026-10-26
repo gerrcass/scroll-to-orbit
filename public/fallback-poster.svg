@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Kestrel on Pad 09 under a night sky">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#040609" />
+      <stop offset="0.52" stop-color="#070d13" />
+      <stop offset="0.78" stop-color="#0d151b" />
+      <stop offset="1" stop-color="#05070a" />
+    </linearGradient>
+    <radialGradient id="horizon" cx="0.68" cy="0.76" r="0.52">
+      <stop offset="0" stop-color="#ff6a32" stop-opacity="0.24" />
+      <stop offset="0.45" stop-color="#ff6a32" stop-opacity="0.08" />
+      <stop offset="1" stop-color="#ff6a32" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="cold" cx="0.2" cy="0.2" r="0.55">
+      <stop offset="0" stop-color="#4d7b9d" stop-opacity="0.15" />
+      <stop offset="1" stop-color="#4d7b9d" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8f8d86" />
+      <stop offset="0.18" stop-color="#d7d2c7" />
+      <stop offset="0.52" stop-color="#f1ece2" />
+      <stop offset="0.8" stop-color="#c0bcb2" />
+      <stop offset="1" stop-color="#777873" />
+    </linearGradient>
+    <linearGradient id="nose" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9a978e" />
+      <stop offset="0.45" stop-color="#eee9df" />
+      <stop offset="1" stop-color="#777873" />
+    </linearGradient>
+    <linearGradient id="deck" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2024" />
+      <stop offset="1" stop-color="#090d11" />
+    </linearGradient>
+    <pattern id="stars" width="240" height="190" patternUnits="userSpaceOnUse">
+      <circle cx="14" cy="28" r="1.2" fill="#f2eee5" opacity=".72" />
+      <circle cx="72" cy="82" r="0.8" fill="#cfe0ef" opacity=".55" />
+      <circle cx="126" cy="22" r="1.5" fill="#f2eee5" opacity=".8" />
+      <circle cx="188" cy="112" r="0.9" fill="#f2eee5" opacity=".5" />
+      <circle cx="214" cy="48" r="1.1" fill="#d7e6f4" opacity=".66" />
+      <circle cx="36" cy="146" r="0.7" fill="#f2eee5" opacity=".46" />
+      <circle cx="96" cy="164" r="1.3" fill="#f2eee5" opacity=".7" />
+      <circle cx="158" cy="70" r="0.6" fill="#f2eee5" opacity=".42" />
+      <circle cx="202" cy="158" r="0.8" fill="#cfe0ef" opacity=".55" />
+      <circle cx="58" cy="54" r="0.55" fill="#f2eee5" opacity=".35" />
+      <circle cx="144" cy="128" r="0.55" fill="#f2eee5" opacity=".38" />
+      <circle cx="8" cy="104" r="0.65" fill="#f2eee5" opacity=".4" />
+    </pattern>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18" />
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+      <feComponentTransfer><feFuncA type="linear" slope="0.06" /></feComponentTransfer>
+    </filter>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffc18c" stop-opacity=".22" />
+      <stop offset="1" stop-color="#ffc18c" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#sky)" />
+  <rect width="1600" height="1000" fill="url(#stars)" opacity=".9" />
+  <rect width="1600" height="1000" fill="url(#cold)" />
+  <rect width="1600" height="1000" fill="url(#horizon)" />
+
+  <g opacity=".9">
+    <circle cx="1318" cy="188" r="2.1" fill="#f2eee5" />
+    <circle cx="1318" cy="188" r="9" fill="#f2eee5" opacity=".08" filter="url(#soft)" />
+    <circle cx="322" cy="132" r="1.4" fill="#d7e6f4" />
+    <circle cx="1064" cy="96" r="1.2" fill="#f2eee5" opacity=".7" />
+    <circle cx="1462" cy="306" r="1.6" fill="#f2eee5" opacity=".65" />
+    <circle cx="512" cy="252" r="1.1" fill="#cfe0ef" opacity=".6" />
+  </g>
+
+  <!-- horizon and ground -->
+  <ellipse cx="1120" cy="790" rx="760" ry="170" fill="#ff6a32" opacity=".05" filter="url(#soft)" />
+  <rect y="786" width="1600" height="214" fill="#040609" />
+  <path d="M0 792 C 260 776 470 768 690 782 C 920 797 1200 760 1600 786 L1600 1000 L0 1000 Z" fill="#070a0e" />
+
+  <!-- distant floodlight haze -->
+  <ellipse cx="520" cy="742" rx="310" ry="90" fill="#ff8a4f" opacity=".06" filter="url(#soft)" />
+  <ellipse cx="1320" cy="720" rx="260" ry="90" fill="#ffb07a" opacity=".07" filter="url(#soft)" />
+
+  <!-- pad deck -->
+  <ellipse cx="1124" cy="842" rx="344" ry="64" fill="url(#deck)" />
+  <ellipse cx="1124" cy="836" rx="286" ry="46" fill="none" stroke="#d9d3c7" stroke-opacity=".14" stroke-width="2" />
+  <ellipse cx="1124" cy="836" rx="230" ry="35" fill="none" stroke="#d9d3c7" stroke-opacity=".09" stroke-width="2" stroke-dasharray="12 16" />
+  <text x="1032" y="858" font-family="JetBrains Mono, monospace" font-size="18" letter-spacing="4" fill="#d9d3c7" opacity=".2">09</text>
+
+  <!-- launch mount -->
+  <g fill="#171b1f" stroke="#4c5256" stroke-width="1">
+    <rect x="1058" y="804" width="26" height="54" />
+    <rect x="1166" y="804" width="26" height="54" />
+    <rect x="1018" y="818" width="22" height="40" />
+    <rect x="1210" y="818" width="22" height="40" />
+  </g>
+
+  <!-- service tower -->
+  <g stroke="#464c51" stroke-width="2" fill="none" opacity=".92">
+    <path d="M864 330 L864 818 M936 330 L936 818 M864 330 L936 818 M936 330 L864 818" />
+    <path d="M864 380 L936 380 M864 440 L936 440 M864 500 L936 500 M864 560 L936 560 M864 620 L936 620 M864 680 L936 680 M864 740 L936 740 M864 798 L936 798" />
+    <path d="M936 486 L1018 486 M936 566 L1004 566 M936 646 L990 646" stroke-opacity=".8" />
+  </g>
+  <circle cx="900" cy="322" r="5" fill="#ff3b17" />
+  <circle cx="900" cy="322" r="16" fill="#ff3b17" opacity=".15" filter="url(#soft)" />
+
+  <!-- lightning mast -->
+  <path d="M772 420 L772 800" stroke="#3c4247" stroke-width="3" />
+  <path d="M742 800 L802 800" stroke="#3c4247" stroke-width="4" />
+
+  <!-- rocket -->
+  <g transform="translate(1124 0)">
+    <!-- body shadow -->
+    <ellipse cx="2" cy="456" rx="44" ry="330" fill="#000" opacity=".28" filter="url(#soft)" />
+    <!-- engines -->
+    <g fill="#1a1d20" stroke="#555b5f" stroke-width="1.2">
+      <path d="M-48 786 L-58 824 L-36 824 L-30 786 Z" />
+      <path d="M-22 786 L-26 826 L-4 826 L-2 786 Z" />
+      <path d="M6 786 L8 826 L30 826 L26 786 Z" />
+      <path d="M34 786 L42 824 L64 824 L54 786 Z" />
+    </g>
+    <!-- landing legs -->
+    <g fill="#22272b" stroke="#565c60" stroke-width="1">
+      <path d="M-58 700 L-84 786 L-66 790 L-46 720 Z" />
+      <path d="M58 700 L84 786 L66 790 L46 720 Z" />
+    </g>
+    <!-- body -->
+    <path d="M-56 314 L-56 786 L56 786 L56 314 Z" fill="url(#body)" />
+    <!-- nose -->
+    <path d="M-56 314 C -54 250 -30 198 0 154 C 30 198 54 250 56 314 Z" fill="url(#nose)" />
+    <!-- panel lines -->
+    <g stroke="#252b2f" stroke-opacity=".3" stroke-width="1">
+      <path d="M-56 390 H56 M-56 470 H56 M-56 550 H56 M-56 640 H56 M-56 720 H56" />
+      <path d="M-28 314 V786 M28 314 V786" stroke-opacity=".12" />
+    </g>
+    <!-- orange band -->
+    <rect x="-56" y="704" width="112" height="16" fill="#ff5a1f" />
+    <rect x="-56" y="704" width="112" height="3" fill="#05070a" opacity=".25" />
+    <!-- text -->
+    <text x="-40" y="398" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="2.2" fill="#23282c" opacity=".7">HALCYON</text>
+    <text x="-40" y="412" font-family="JetBrains Mono, monospace" font-size="7" letter-spacing="1.8" fill="#23282c" opacity=".55">KESTREL / K-01</text>
+    <!-- highlight -->
+    <path d="M-30 340 C -22 260 -6 212 0 178 L0 786 L-30 786 Z" fill="#ffffff" opacity=".1" />
+    <!-- grid fins -->
+    <g fill="#3f4549" stroke="#6b7175" stroke-width=".8">
+      <rect x="-72" y="330" width="14" height="26" />
+      <rect x="58" y="330" width="14" height="26" />
+    </g>
+  </g>
+
+  <!-- floodlights -->
+  <g>
+    <path d="M1348 692 L1204 838 L1268 838 L1372 712 Z" fill="url(#beam)" />
+    <rect x="1338" y="630" width="6" height="180" fill="#282d31" />
+    <circle cx="1341" cy="628" r="5" fill="#ffd2a2" />
+    <circle cx="1341" cy="628" r="28" fill="#ffb37c" opacity=".22" filter="url(#soft)" />
+  </g>
+
+  <!-- perimeter lights -->
+  <g fill="#ffcf9e" opacity=".6">
+    <circle cx="844" cy="860" r="2.2" />
+    <circle cx="932" cy="884" r="2" />
+    <circle cx="1040" cy="898" r="2.2" />
+    <circle cx="1208" cy="898" r="2" />
+    <circle cx="1318" cy="880" r="2.2" />
+    <circle cx="1412" cy="854" r="2" />
+  </g>
+
+  <rect width="1600" height="1000" filter="url(#grain)" opacity=".5" />
+</svg>

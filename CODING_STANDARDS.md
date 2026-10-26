@@ -5,17 +5,19 @@ Read this before reviewing a PR. It is deliberately short; use `AGENTS.md` for n
 ## Motion
 
 - A user who prefers reduced motion sees the same content in the same order with no scroll-linked camera, no parallax, no marquee, and no auto-playing sequence. Reveals resolve immediately.
-- Smooth scrolling exists only in full motion. Touch devices use native scrolling.
+- Reduced motion maps each act to a static **reduced still**; adding an act means adding a still and a test.
+- Smooth scrolling exists only in full motion. Touch devices use native scrolling. The motion toggle rebuilds ScrollSmoother live and persists.
 - An animation that cannot be disabled from `src/motion/preferences.ts` is a bug.
-- Scroll progress must be owned by the Story Director. A `scrollY` read inside the Three.js layer fails review.
+- Scroll progress is owned by the Story Director. A `scrollY` read inside the Three.js layer fails review.
 
 ## Accessibility
 
 - Keyboard reaches every interactive element in document order; focus is always visible.
 - The canvas is `aria-hidden`. Any meaning rendered there is also in the document or in the telemetry alternative.
 - The Act Rail is a `<nav>` with links, not a decorative list of dots.
-- A phone at 360 px must not scroll horizontally. Minimum touch target is 44 × 44 px.
+- A phone at 360 px must not scroll horizontally. Key touch targets are at least 44 × 44 px.
 - Color contrast meets WCAG AA for body and UI text; decorative labels may be lower contrast only when duplicated by accessible text.
+- `pnpm test:e2e` must keep axe clean in full and reduced motion.
 
 ## Architecture
 
@@ -33,6 +35,8 @@ Read this before reviewing a PR. It is deliberately short; use `AGENTS.md` for n
 
 ## Performance
 
-- Cap DPR at 1.75 and degrade to 1.25 on sustained slowness.
-- New per-frame work must reuse vectors and materials. No allocations in the render loop.
-- The initial JS payload budget is 350 KB gzipped. The build script fails above it.
+- No full-screen `backdrop-filter` and no animated grain. They were removed after measurement; use more opaque translucent surfaces instead.
+- Merge static scene geometry by material. The large ground fill is unlit; the Earth shader is tiered by segments and octaves.
+- Cap DPR at 1.75; the adaptive floor is 0.85. Particle counts scale by device tier.
+- No per-frame allocations. Reuse camera keys, vectors, and samplers; the render loop must not build objects.
+- The initial JS budget is 350 KB gzipped. The build fails above it.
