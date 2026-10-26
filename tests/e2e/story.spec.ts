@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 const offsets = async (page: Page): Promise<Record<string, number>> =>
@@ -177,4 +178,121 @@ test("the brief keeps a mailto fallback without JavaScript", async ({ browser })
   await expect(page.locator("[data-contact-form]")).toHaveAttribute("action", /mailto:/);
   await expect(page.locator("[data-contact-form]")).toContainText("missions@halcyon.space");
   await context.close();
+});
+
+
+test("reduced motion uses act stills and stops the scroll-linked camera", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "reduced");
+
+  const positions = await offsets(page);
+  await scrollTo(page, positions.ascent ?? 0);
+  await page.waitForFunction(() => document.body.dataset.act === "ASCENT");
+  await expect(page.locator("#stage")).toHaveAttribute("data-view-progress", "0.420");
+
+  const still = await page.locator("#stage").getAttribute("data-view-progress");
+  await page.evaluate(() => window.scrollBy(0, 120));
+  await page.waitForTimeout(500);
+  await expect(page.locator("#stage")).toHaveAttribute("data-view-progress", still ?? "0.420");
+
+  await scrollTo(page, positions.separation ?? 0);
+  await page.waitForFunction(() => document.body.dataset.act === "SEPARATION");
+  await expect(page.locator("#stage")).toHaveAttribute("data-view-progress", "0.650");
+
+  await scrollTo(page, positions.orbit ?? 0);
+  await page.waitForFunction(() => document.body.dataset.act === "ORBIT");
+  await expect(page.locator("#stage")).toHaveAttribute("data-view-progress", "0.930");
+  await expect(page.locator("#orbit-title")).toBeVisible();
+});
+
+test("the motion toggle applies live and persists", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => document.querySelector<HTMLElement>("[data-motion-toggle]")?.click());
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "reduced");
+
+  const positions = await offsets(page);
+  await scrollTo(page, (positions.ascent ?? 0) + 200);
+  await page.waitForTimeout(700);
+  const wrapperTransform = await page.evaluate(
+    () => getComputedStyle(document.querySelector("#smooth-wrapper") as Element).transform,
+  );
+  expect(wrapperTransform === "none" || wrapperTransform === "matrix(1, 0, 0, 1, 0, 0)").toBe(true);
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "reduced");
+
+  await page.evaluate(() => document.querySelector<HTMLElement>("[data-motion-toggle]")?.click());
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "full");
+});
+
+test("WebGL off shows the designed poster and keeps the story", async ({ page }) => {
+  await page.addInitScript(`
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function(type, ...args) {
+      if (String(type).includes("webgl")) return null;
+      return original.apply(this, [type, ...args]);
+    };
+  `);
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-webgl", "false");
+  await expect(page.locator(".webgl-poster img")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("The last quiet");
+
+  const positions = await offsets(page);
+  await scrollTo(page, positions.orbit ?? 0);
+  await expect(page.locator("#orbit-title")).toBeVisible();
+  await scrollTo(page, positions.contact ?? 0);
+  await expect(page.locator("[data-contact-form]")).toBeVisible();
+});
+
+test("no horizontal overflow at 360 px across the story", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/");
+  const ids = ["top", "manifesto", "vehicle", "mission", "ascent", "separation", "orbit", "manifest", "contact"];
+  for (const id of ids) {
+    await page.evaluate((sectionId) => {
+      const section = document.getElementById(sectionId);
+      if (section) window.scrollTo({ top: section.getBoundingClientRect().top + window.scrollY, behavior: "instant" });
+    }, id);
+    await page.waitForTimeout(220);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth + 1,
+    );
+    expect(overflow, `overflow at #${id}`).toBe(false);
+  }
+});
+
+test("axe finds no serious or critical violations in full and reduced motion", async ({ page }) => {
+  test.slow();
+  const audit = async (): Promise<void> => {
+    const height = await page.evaluate(() => document.body.scrollHeight);
+    for (let y = 0; y < height; y += 680) {
+      await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), y);
+      await page.waitForTimeout(80);
+    }
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await page.waitForTimeout(700);
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    const serious = results.violations.filter(
+      (violation) => violation.impact === "serious" || violation.impact === "critical",
+    );
+    expect(
+      serious.map((violation) => ({
+        id: violation.id,
+        impact: violation.impact,
+        targets: violation.nodes.map((node) => node.target),
+      })),
+    ).toEqual([]);
+  };
+
+  await page.goto("/");
+  await audit();
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "reduced");
+  await audit();
 });

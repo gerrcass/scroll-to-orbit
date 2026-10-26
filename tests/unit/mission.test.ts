@@ -11,6 +11,7 @@ import {
   ignitionEnvelope,
   missionClockParts,
   missionClockSpeech,
+  reducedStillForAct,
   rocketLiftForProgress,
   telemetryForProgress,
   telemetrySentence,
@@ -171,5 +172,23 @@ describe("speech and readout formatting", () => {
     expect(sentence).toContain("96 kilometers downrange");
     expect(sentence).toContain("first stage");
     expect(sentence).toContain("max-q");
+  });
+});
+
+
+describe("reducedStillForAct", () => {
+  it("selects a readable still for every act", () => {
+    expect(reducedStillForAct("PAD")).toBe(0.04);
+    expect(reducedStillForAct("IGNITION")).toBe(0.22);
+    expect(reducedStillForAct("ASCENT")).toBe(0.42);
+    expect(reducedStillForAct("SEPARATION")).toBe(0.65);
+    expect(reducedStillForAct("ORBIT")).toBe(0.93);
+  });
+
+  it("moves forward through the story", () => {
+    const values = (["PAD", "IGNITION", "ASCENT", "SEPARATION", "ORBIT"] as const).map(
+      reducedStillForAct,
+    );
+    expect(values).toEqual([...values].sort((a, b) => a - b));
   });
 });

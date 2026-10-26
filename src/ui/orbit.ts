@@ -30,9 +30,16 @@ export const initOrbit = (): void => {
   const mapLabels = Array.from(document.querySelectorAll<SVGElement>("[data-orbit-label]"));
   const notches = Array.from(document.querySelectorAll<HTMLElement>("[data-dial-notch]"));
   const orbitMap = document.querySelector<HTMLElement>(".orbit-map");
-  const reduced = getMotionPreference() === "reduced";
+  const dialHint = document.querySelector<HTMLElement>("[data-dial-hint]");
+  let reduced = getMotionPreference() === "reduced";
 
   let current = profileById("SSO");
+
+  const renderHint = (): void => {
+    if (dialHint) {
+      dialHint.textContent = getMotionPreference() === "reduced" ? "ARROW KEYS" : "DRAG / ARROW KEYS";
+    }
+  };
   let draggable: Draggable | null = null;
   let satelliteTween: gsap.core.Tween | null = null;
 
@@ -148,25 +155,24 @@ export const initOrbit = (): void => {
   if (knob && drag) {
     gsap.set(drag, { rotation: needleRotation(current) });
 
-    if (!reduced) {
-      [draggable] = Draggable.create(drag, {
-        type: "rotation",
-        trigger: knob,
-        inertia: true,
-        bounds: { minRotation: -105, maxRotation: 165 },
-        snap: (value: number) => snapRotation(value),
-        onPress: () => knob.focus(),
-        onDrag: function (this: Draggable) {
-          updateFromRotation(this.rotation);
-        },
-        onThrowUpdate: function (this: Draggable) {
-          updateFromRotation(this.rotation);
-        },
-        onThrowComplete: function (this: Draggable) {
-          applyProfile(profileForRotation(this.rotation), true);
-        },
-      });
-    }
+    [draggable] = Draggable.create(drag, {
+      type: "rotation",
+      trigger: knob,
+      inertia: true,
+      bounds: { minRotation: -105, maxRotation: 165 },
+      snap: (value: number) => snapRotation(value),
+      onPress: () => knob.focus(),
+      onDrag: function (this: Draggable) {
+        updateFromRotation(this.rotation);
+      },
+      onThrowUpdate: function (this: Draggable) {
+        updateFromRotation(this.rotation);
+      },
+      onThrowComplete: function (this: Draggable) {
+        applyProfile(profileForRotation(this.rotation), true);
+      },
+    });
+    if (reduced) draggable?.disable();
 
     knob.addEventListener("keydown", (event) => {
       const keys = ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"];
@@ -200,6 +206,21 @@ export const initOrbit = (): void => {
       });
     }
   }
+
+  renderHint();
+
+  document.addEventListener("halcyon:motion", () => {
+    reduced = getMotionPreference() === "reduced";
+    renderHint();
+    if (reduced) {
+      satelliteTween?.kill();
+      draggable?.disable();
+      moveSatellite(current, true);
+    } else {
+      draggable?.enable();
+      moveSatellite(current, true);
+    }
+  });
 
   ScrollTrigger.refresh();
 };

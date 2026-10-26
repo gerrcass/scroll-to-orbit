@@ -8,10 +8,6 @@ export const initMotionToggle = (): void => {
     const reduced = getMotionPreference() === "reduced";
     buttons.forEach((button) => {
       button.setAttribute("aria-pressed", String(reduced));
-      button.setAttribute(
-        "aria-label",
-        reduced ? "Switch to full motion" : "Switch to reduced motion",
-      );
     });
     labels.forEach((label) => {
       label.textContent = reduced ? "REDUCED" : "FULL";

@@ -81,8 +81,7 @@
   margin-right: clamp(0px, 7vw, 118px);
   margin-bottom: clamp(24px, 5vh, 56px);
   border: 1px solid var(--line);
-  background: rgba(6, 10, 14, 0.52);
-  backdrop-filter: blur(14px);
+  background: rgba(6, 10, 14, 0.68);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
 }
 
@@ -274,7 +273,6 @@
   padding: 26px 28px;
   border-left: 1px solid var(--line);
   background: linear-gradient(90deg, rgba(5, 7, 10, 0.76), rgba(5, 7, 10, 0.24));
-  backdrop-filter: blur(5px);
   color: var(--muted);
   font-size: clamp(14px, 1.02vw, 16px);
   line-height: 1.72;
@@ -437,7 +435,6 @@
     radial-gradient(ellipse 70% 55% at 50% 40%, rgba(159, 196, 221, 0.08), transparent 70%),
     rgba(5, 8, 11, 0.84);
   overflow: hidden;
-  backdrop-filter: blur(2px);
 }
 
 .figure__bar {
@@ -627,8 +624,7 @@
   margin: 12px auto 0;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(5, 7, 10, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(5, 7, 10, 0.64);
   text-shadow: 0 2px 12px rgba(5, 7, 10, 0.9);
   color: var(--muted);
   font-family: var(--mono);
@@ -724,8 +720,7 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  background: rgba(5, 7, 10, 0.62);
-  backdrop-filter: blur(7px);
+  background: rgba(5, 7, 10, 0.74);
 }
 
 .launch__readouts > div {
@@ -786,8 +781,7 @@
 .ascent__note {
   padding: 18px 20px;
   border-left: 1px solid var(--line);
-  background: rgba(5, 7, 10, 0.5);
-  backdrop-filter: blur(5px);
+  background: rgba(5, 7, 10, 0.64);
 }
 
 .ascent__note span {
@@ -811,8 +805,7 @@
   grid-template-columns: 1.25fr repeat(5, minmax(0, 1fr));
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  background: rgba(5, 7, 10, 0.52);
-  backdrop-filter: blur(5px);
+  background: rgba(5, 7, 10, 0.68);
 }
 
 .telemetry__cell {
@@ -885,8 +878,7 @@
   margin-top: clamp(40px, 6vh, 70px);
   padding: 0 16px;
   border-top: 1px solid var(--line);
-  background: rgba(5, 7, 10, 0.46);
-  backdrop-filter: blur(4px);
+  background: rgba(5, 7, 10, 0.6);
 }
 
 .event {
@@ -1115,7 +1107,6 @@
   margin-inline: auto;
   border: 1px solid var(--line);
   background: rgba(5, 8, 11, 0.52);
-  backdrop-filter: blur(12px);
 }
 
 .dial__head {
@@ -1431,8 +1422,7 @@
 .contact__form {
   padding: 26px;
   border: 1px solid var(--line);
-  background: rgba(6, 10, 14, 0.58);
-  backdrop-filter: blur(14px);
+  background: rgba(6, 10, 14, 0.72);
 }
 
 .contact__form label {
@@ -1455,7 +1445,7 @@
   padding: 0 16px;
   border: 1px solid var(--line);
   border-radius: 2px;
-  background: rgba(5, 7, 10, 0.55);
+  background: rgba(5, 7, 10, 0.68);
   color: var(--bone);
   font-family: var(--mono);
   font-size: 11px;
@@ -1690,7 +1680,6 @@
     padding: 0;
     border-left: 0;
     background: none;
-    backdrop-filter: none;
   }
 
   .vehicle__grid,
@@ -1805,8 +1794,7 @@
 
   .launch__log {
     padding: 8px 10px;
-    background: rgba(5, 7, 10, 0.52);
-    backdrop-filter: blur(4px);
+    background: rgba(5, 7, 10, 0.68);
   }
 
   .mission-card__head,

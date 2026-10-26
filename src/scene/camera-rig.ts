@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { cameraForProgress } from "../mission/camera";
+import { cameraForProgressInto } from "../mission/camera";
+import type { CameraKey } from "../mission/types";
 
 export interface PointerState {
   x: number;
@@ -13,6 +14,13 @@ export class CameraRig {
   private readonly lookAt = new THREE.Vector3();
   private readonly drift = new THREE.Vector3();
   private readonly targetDrift = new THREE.Vector3();
+  private readonly key: CameraKey = {
+    progress: 0,
+    position: [0, 0, 0],
+    lookAt: [0, 0, 0],
+    fov: 37,
+    roll: 0,
+  };
 
   constructor(camera: THREE.PerspectiveCamera) {
     this.camera = camera;
@@ -25,7 +33,7 @@ export class CameraRig {
     reducedMotion: boolean,
     shake = 0,
   ): void {
-    const key = cameraForProgress(progress);
+    const key = cameraForProgressInto(progress, this.key);
     const calm = reducedMotion ? 0 : 1;
     const portrait = Math.min(1, Math.max(0, (0.98 - this.camera.aspect) / 0.55));
     const distanceScale = 1 + portrait * 0.56;
@@ -64,7 +72,7 @@ export class CameraRig {
   }
 
   reset(progress: number): void {
-    const key = cameraForProgress(progress);
+    const key = cameraForProgressInto(progress, this.key);
     this.camera.position.set(key.position[0], key.position[1], key.position[2]);
     this.camera.lookAt(key.lookAt[0], key.lookAt[1], key.lookAt[2]);
     this.camera.rotation.z = key.roll;

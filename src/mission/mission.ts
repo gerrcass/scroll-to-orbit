@@ -129,8 +129,20 @@ export const rocketLiftForProgress = (progress: number): number => {
   return lerp(44, 52, easeOutCubic(inverseLerp(0.72, 1, p)));
 };
 
-export const throttleForProgress = (progress: number): number =>
-  telemetryForProgress(progress).throttle / 100;
+export const throttleForProgress = (progress: number): number => {
+  const p = clamp01(progress);
+  const last = MISSION_KEYS[MISSION_KEYS.length - 1]!;
+  if (p >= last.progress) return last.throttle / 100;
+  for (let index = 0; index < MISSION_KEYS.length - 1; index += 1) {
+    const from = MISSION_KEYS[index]!;
+    const to = MISSION_KEYS[index + 1]!;
+    if (p >= from.progress && p <= to.progress) {
+      const t = inverseLerp(from.progress, to.progress, p);
+      return lerp(from.throttle, to.throttle, t) / 100;
+    }
+  }
+  return 0;
+};
 
 export const ignitionEnvelope = (progress: number): number => {
   const p = clamp01(progress);
@@ -194,3 +206,25 @@ export const telemetrySentence = (snapshot: TelemetrySnapshot): string => {
 function pad2(value: number): string {
   return String(value).padStart(2, "0");
 }
+
+
+/**
+ * In reduced motion the 3D scene is a set of stills, one per act. These
+ * progress values are chosen for a readable composition, not for continuity.
+ */
+export const reducedStillForAct = (act: Act): number => {
+  switch (act) {
+    case "PAD":
+      return 0.04;
+    case "IGNITION":
+      return 0.22;
+    case "ASCENT":
+      return 0.42;
+    case "SEPARATION":
+      return 0.65;
+    case "ORBIT":
+      return 0.93;
+    default:
+      return 0.04;
+  }
+};

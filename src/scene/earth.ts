@@ -51,7 +51,7 @@ const earthFragment = /* glsl */ `
   float fbm(vec2 p) {
     float value = 0.0;
     float amplitude = 0.5;
-    for (int index = 0; index < 4; index += 1) {
+    for (int index = 0; index < OCTAVES; index += 1) {
       value += amplitude * noise(p);
       p = p * 2.03 + 7.1;
       amplitude *= 0.5;
@@ -118,7 +118,7 @@ const atmosphereFragment = /* glsl */ `
   }
 `;
 
-export const createEarth = (segments = 72): EarthModel => {
+export const createEarth = (segments = 72, octaves = 4): EarthModel => {
   const group = new THREE.Group();
   group.name = "Earth";
   group.position.set(0, -230, -150);
@@ -133,6 +133,7 @@ export const createEarth = (segments = 72): EarthModel => {
       },
       vertexShader: earthVertex,
       fragmentShader: earthFragment,
+      defines: { OCTAVES: octaves },
       toneMapped: false,
     }),
   );

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { createDeckTexture, createGlowTexture, createShadowTexture } from "./textures";
 
 export interface PadModel {
@@ -61,11 +62,20 @@ export const createPad = (): PadModel => {
     depthWrite: false,
   });
 
+  const pending = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  const addStatic = (mesh: THREE.Mesh): void => {
+    mesh.updateMatrix();
+    const geometry = mesh.geometry.clone().applyMatrix4(mesh.matrix);
+    const material = mesh.material as THREE.Material;
+    const list = pending.get(material) ?? [];
+    list.push(geometry);
+    pending.set(material, list);
+    mesh.geometry.dispose();
+  };
+
   // Ground and deck.
-  const ground = new THREE.Mesh(
-    new THREE.CircleGeometry(130, 72),
-    new THREE.MeshStandardMaterial({ color: 0x070a0d, roughness: 1 }),
-  );
+  const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x070a0d });
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(130, 72), groundMaterial);
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.015;
   group.add(ground);
@@ -98,12 +108,12 @@ export const createPad = (): PadModel => {
     const angle = (index / 4) * Math.PI * 2 + Math.PI / 4;
     const mount = box(0.34, 0.9, 0.34, darkMetal);
     mount.position.set(Math.cos(angle) * 1.24, 0.79, Math.sin(angle) * 1.24);
-    group.add(mount);
+    addStatic(mount);
   }
   const mountRing = new THREE.Mesh(new THREE.TorusGeometry(1.26, 0.08, 8, 32), steel);
   mountRing.rotation.x = Math.PI / 2;
   mountRing.position.y = 1.18;
-  group.add(mountRing);
+  addStatic(mountRing);
 
   // Service tower.
   const towerX = -3.65;
@@ -118,12 +128,12 @@ export const createPad = (): PadModel => {
   for (const [x, z] of legs) {
     const leg = box(0.14, towerHeight, 0.14, steel);
     leg.position.set(towerX + x, towerHeight / 2, towerZ + z);
-    group.add(leg);
+    addStatic(leg);
   }
   for (let level = 0.7; level < towerHeight; level += 1.1) {
     const ring = box(0.92, 0.07, 0.92, darkMetal);
     ring.position.set(towerX, level, towerZ);
-    group.add(ring);
+    addStatic(ring);
     const crossA = brace(
       new THREE.Vector3(towerX - 0.38, level, towerZ - 0.38),
       new THREE.Vector3(towerX + 0.38, level + 1.1, towerZ - 0.38),
@@ -136,7 +146,8 @@ export const createPad = (): PadModel => {
       0.035,
       steel,
     );
-    group.add(crossA, crossB);
+    addStatic(crossA);
+    addStatic(crossB);
   }
 
   // Service arms reaching toward the vehicle.
@@ -147,16 +158,16 @@ export const createPad = (): PadModel => {
   ] as const) {
     const arm = box(length, 0.09, 0.16, steel);
     arm.position.set(towerX + length / 2 + 0.38, height, towerZ + 0.28);
-    group.add(arm);
+    addStatic(arm);
     const tip = box(0.16, 0.48, 0.16, darkMetal);
     tip.position.set(towerX + length + 0.38, height - 0.2, towerZ + 0.28);
-    group.add(tip);
+    addStatic(tip);
   }
 
   // Tower beacon.
   const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 8), redLamp);
   beacon.position.set(towerX, towerHeight + 0.14, towerZ);
-  group.add(beacon);
+  addStatic(beacon);
   const beaconGlow = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: glowTexture,
@@ -176,7 +187,7 @@ export const createPad = (): PadModel => {
     const angle = (index / 16) * Math.PI * 2;
     const light = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), warmLamp);
     light.position.set(Math.cos(angle) * 6.05, 0.4, Math.sin(angle) * 6.05);
-    group.add(light);
+    addStatic(light);
   }
 
   // Contact shadow.
@@ -213,11 +224,21 @@ export const createPad = (): PadModel => {
   floodlight.target.position.set(0, 5.2, 0);
   group.add(floodlight, floodlight.target);
 
+  const mergedMeshes: THREE.Mesh[] = [];
+  for (const [material, geometries] of pending) {
+    const merged = mergeGeometries(geometries, false);
+    if (!merged) continue;
+    mergedMeshes.push(new THREE.Mesh(merged, material));
+    geometries.forEach((geometry) => geometry.dispose());
+  }
+  group.add(...mergedMeshes);
+
   const dispose = (): void => {
     deckTexture.dispose();
     glowTexture.dispose();
     shadowTexture.dispose();
     ground.geometry.dispose();
+    groundMaterial.dispose();
     deck.geometry.dispose();
     deckTop.geometry.dispose();
     padRing.geometry.dispose();
@@ -228,6 +249,7 @@ export const createPad = (): PadModel => {
     warmLamp.dispose();
     redLamp.dispose();
     paint.dispose();
+    mergedMeshes.forEach((mesh) => mesh.geometry.dispose());
   };
 
   return { group, shadow, floodlight, dispose };

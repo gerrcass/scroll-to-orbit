@@ -26,8 +26,7 @@
 }
 
 .site-header.is-scrolled {
-  background: rgba(5, 7, 10, 0.74);
-  backdrop-filter: blur(16px);
+  background: rgba(5, 7, 10, 0.86);
 }
 
 .site-header.is-scrolled::after {
@@ -192,7 +191,6 @@
   background:
     radial-gradient(ellipse 70% 55% at 80% 80%, rgba(255, 90, 31, 0.14), transparent 65%),
     rgba(5, 7, 10, 0.97);
-  backdrop-filter: blur(18px);
 }
 
 .mobile-menu[hidden] {
@@ -422,5 +420,24 @@ body.menu-open {
 
   .mobile-menu nav a {
     min-height: 54px;
+  }
+}
+
+
+@media (max-width: 720px) {
+  .site-footer__links a,
+  .site-footer .back-to-top,
+  .site-footer .motion-toggle,
+  .brand--footer,
+  .scroll-cue {
+    min-height: 44px;
+  }
+
+  .site-footer__links a,
+  .site-footer .back-to-top,
+  .site-footer .motion-toggle,
+  .brand--footer {
+    display: inline-flex;
+    align-items: center;
   }
 }
