@@ -1483,6 +1483,34 @@
   line-height: 1.6;
 }
 
+.contact__note a {
+  color: var(--bone-dim);
+  border-bottom: 1px solid var(--line);
+  transition: color var(--dur), border-color var(--dur);
+}
+
+.contact__note a:hover {
+  color: var(--ember);
+  border-color: var(--ember);
+}
+
+.contact__form.is-sent {
+  border-color: rgba(185, 239, 120, 0.38);
+}
+
+.contact__form.is-sent .button {
+  border: 1px solid rgba(185, 239, 120, 0.38);
+  background: rgba(185, 239, 120, 0.12);
+  color: var(--go);
+  opacity: 1;
+  cursor: default;
+}
+
+.contact__form.is-sent .button svg {
+  opacity: 0.55;
+  transform: none;
+}
+
 .form-status {
   min-height: 1.4em;
   margin-top: 10px;

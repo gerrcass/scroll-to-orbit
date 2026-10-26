@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 const offsets = async (page: Page): Promise<Record<string, number>> =>
   page.evaluate(() =>
     Object.fromEntries(
-      ["vehicle", "mission", "ascent", "separation", "orbit"].map((id) => [
+      ["vehicle", "mission", "ascent", "separation", "orbit", "manifest", "contact"].map((id) => [
         id,
         Math.round(
           (document.getElementById(id)?.getBoundingClientRect().top ?? 0) + window.scrollY,
@@ -39,6 +39,9 @@ test("the story advances through the countdown and ascent", async ({ page }) => 
 
   await scrollTo(page, (positions.ascent ?? 0) + 450);
   await expect(page.locator('[data-act-link="ASCENT"]')).toHaveClass(/is-active/);
+  await page.waitForFunction(
+    () => Number(document.querySelector('[data-telemetry="altitude"]')?.textContent ?? 0) > 0,
+  );
   const altitude = await page.locator('[data-telemetry="altitude"]').first().textContent();
   expect(Number(altitude)).toBeGreaterThan(0);
 
@@ -140,4 +143,38 @@ test("the orbit dial is keyboard operable and rewrites the map", async ({ page }
   await expect(knob).toHaveAttribute("aria-valuenow", "0");
   await expect(page.locator('[data-dial="name"]')).toHaveText("LEO");
   await expect(page.locator('[data-dial="altitude"]')).toHaveText("550");
+});
+
+
+test("the manifest lists three missions and the brief form completes", async ({ page }) => {
+  await page.goto("/");
+  const positions = await offsets(page);
+
+  await scrollTo(page, positions.manifest ?? 0);
+  await expect(page.locator(".mission-row")).toHaveCount(3);
+  await expect(page.locator(".mission-row").first()).toContainText("VESPER-01");
+
+  await scrollTo(page, positions.contact ?? 0);
+  const form = page.locator("[data-contact-form]");
+  const button = form.locator('button[type="submit"]');
+  await expect(form).toBeVisible();
+  await form.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(700);
+  await page.locator("#email").fill("ops@example.com");
+  await button.click();
+
+  await expect(form).toHaveClass(/is-sent/, { timeout: 10_000 });
+  await expect(page.locator("[data-form-status]")).toContainText("Intent logged");
+  await expect(button).toBeDisabled();
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test("the brief keeps a mailto fallback without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("The last quiet");
+  await expect(page.locator("[data-contact-form]")).toHaveAttribute("action", /mailto:/);
+  await expect(page.locator("[data-contact-form]")).toContainText("missions@halcyon.space");
+  await context.close();
 });

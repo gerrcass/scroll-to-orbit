@@ -1,4 +1,4 @@
-import { gsap } from "../motion/gsap";
+import { Flip, gsap } from "../motion/gsap";
 import { getMotionPreference } from "../motion/preferences";
 
 const FOCUSABLE = "a[href], button:not([disabled]), input, [tabindex]:not([tabindex='-1'])";
@@ -12,7 +12,9 @@ export const initMenu = (): void => {
 
   let open = false;
   let lastFocus: HTMLElement | null = null;
-  let animation: gsap.core.Timeline | null = null;
+  let animation: gsap.core.Timeline | gsap.core.Tween | null = null;
+
+  const panel = menu.querySelector<HTMLElement>(".mobile-menu__inner");
 
   const focusables = (): HTMLElement[] =>
     Array.from(menu.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
@@ -35,16 +37,27 @@ export const initMenu = (): void => {
     if (reduced) {
       gsap.set(menu, { clearProps: "opacity,visibility" });
     } else {
-      animation = gsap
-        .timeline()
-        .fromTo(menu, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.32, ease: "power2.out" })
-        .from(
-          menu.querySelectorAll("nav a, .mobile-menu__foot > *"),
-          { y: 26, autoAlpha: 0, duration: 0.55, stagger: 0.055, ease: "halcyon" },
-          0.06,
+      gsap.fromTo(menu, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.28, ease: "power2.out" });
+
+      if (panel) {
+        Flip.fit(panel, toggle, { scale: true });
+        const fittedState = Flip.getState(panel);
+        gsap.set(panel, { clearProps: "transform,transformOrigin,width,height,position,top,left" });
+        animation = Flip.from(fittedState, {
+          duration: 0.7,
+          scale: true,
+          absolute: true,
+          ease: "halcyon",
+          onComplete: () => gsap.set(panel, { clearProps: "transform,transformOrigin" }),
+        });
+        gsap.fromTo(
+          panel.querySelectorAll("nav a, .mobile-menu__foot > *"),
+          { autoAlpha: 0, y: 14 },
+          { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.04, delay: 0.2, ease: "halcyon" },
         );
+      }
     }
-    window.setTimeout(() => focusables()[0]?.focus(), reduced ? 0 : 180);
+    window.setTimeout(() => focusables()[0]?.focus(), reduced ? 0 : 320);
   };
 
   const closeMenu = (returnFocus = true): void => {
@@ -60,6 +73,7 @@ export const initMenu = (): void => {
     const finish = (): void => {
       menu.hidden = true;
       gsap.set(menu, { clearProps: "opacity,visibility" });
+      if (panel) gsap.set(panel, { clearProps: "transform,transformOrigin" });
       if (returnFocus) (lastFocus ?? toggle).focus();
     };
 
